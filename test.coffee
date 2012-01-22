@@ -1,0 +1,15 @@
+root = new Node(0, 0, 0)
+
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 3))
+root.insert(new Point(2, 4))
+root.insert(new Point(2, 30))
+
+root.print()
