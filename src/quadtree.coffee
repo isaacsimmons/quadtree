@@ -42,6 +42,10 @@ class Node
         #TODO: by doing the x and y intersect checks here instead of recursing the children, I can save half of the comparisons
         child.insert(id, pos) if child.intersects(pos)
 
+    remove: (id) =>
+      delete @items[id]
+      #TODO: check if the leaf needs to be rolled back up
+
 
   makeBranch: () =>
     #turn node into a leaf node
@@ -73,8 +77,10 @@ class QuadTree
     pow = Math.pow(2, @numLevels)
 
     #some defaults if constructor is called with only one arg
-    @minX = -pow / 2 if not @minX?
-    @minY = -pow / 2 if not @minY?
+    @minX = 0 if not @minX?
+    @minY = 0 if not @minY?
+#    @minX = -pow / 2 if not @minX?
+#    @minY = -pow / 2 if not @minY?
     @sizeX = pow if not @sizeX?
     @sizeY = pow if not @sizeY?
 
@@ -99,6 +105,8 @@ class QuadTree
 #  find: (minX, minY, maxX = minX, maxY = minY) =>
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
+    if minX < @minX or minY < @minY or maxX >= (@minX + @sizeX) or maxY >= (@minY + @sizeY)
+      throw "coordinate out of bounds for quadtree"
     oldPosition = @positions[id]
     newPosition = @normalize(minX, minY, maxX, maxY)
     if oldPosition?
@@ -106,13 +114,13 @@ class QuadTree
     @positions[id] = newPosition
     @root.insert(id, newPosition)
 
+
+  remove: (id) =>
+    pos = @positions[id]
+    throw "Item not present in quadtree" if not pos?
+    leaves = @find(pos)
+    for own leaf in leaves
+      leaf.remove(id)
+
   print: () =>
     @root.print(0)
-
-#    Bitwise AND 	a & b 	Returns a one in each bit position for which the corresponding bits of both operands are ones.
-#      Bitwise OR 	a | b 	Returns a one in each bit position for which the corresponding bits of either or both operands are ones.
-#      Bitwise XOR 	a ^ b 	Returns a one in each bit position for which the corresponding bits of either but not both operands are ones.
-#      Bitwise NOT 	~ a 	Inverts the bits of its operand.
-#  Left shift 	a << b 	Shifts a in binary representation b (< 32) bits to the left, shifting in zeros from the right.
-#  Sign-propagating right shift 	a >> b 	Shifts a in binary representation b (< 32) bits to the right, discarding bits shifted off.
-#Zero-fill right shift 	a >>> b 	Shifts a in binary representation b (< 32) bits to the right, discarding bits shifted off, and shifting in zeros from the left.

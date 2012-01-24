@@ -1,4 +1,0 @@
-#!/bin/bash
-
-rm -rf build
-coffee -c --watch -o 'build' --join combined test.coffee main.coffee
