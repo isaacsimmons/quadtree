@@ -1,5 +1,3 @@
-SIZE = 100
-MAX_LEVEL = 6
 MAX_ITEMS = 10
 
 BOTTOM_LEFT = 0
@@ -9,72 +7,112 @@ TOP_RIGHT = 3
 
 SPACES = ['', ' ', '  ', '   ', '    ', '     ', '      ', '       ', '        ']
 
-
-class Point
-  constructor: (@x, @y) ->
-
-  print: () =>
-    console.log('POINT (' + @x + ', ' + @y + ')')
-
-
 class Node
-  constructor: (@minX, @minY, @level) ->
-    size = Math.pow(0.5, @level) * SIZE
-    @midX = @minX + (size / 2)
-    @midY = @minX + (size / 2)
+  constructor: (@minX, @minY, @level, @parent = null) ->
+    #TODO: do I care about the parent pointer?
+    size = Math.pow(2, level)
+    @midX = @minX + size / 2
+    @midY = @minY + size / 2
     @maxX = @minX + size
-    @maxY = @minX + size
+    @maxY = @minY + size
+
     @children = []
+    @items = {}
+    @numItems = 0
     @leaf = true
 
-  makeLeaf: () =>
-    @leaf = true
-    #TODO: digest existing child nodes
+  find: (pos) =>
+    ret = []
+    if @leaf
+      ret.push(@) if @intersects(pos)
+    else
+      ret.concat(child.find(pos)) for own child in @children
+    ret
+
+  intersects: (pos) =>
+    (pos[2] >= @minX and pos[0] < @maxX) and (pos[3] >= @minY and pos[1] < @maxY)
+
+  insert: (id, pos) =>
+    if @leaf
+      @items[id] = pos
+      @numItems += 1
+      @makeBranch() if @numItems > MAX_ITEMS and @level > 0
+    else
+      for own child in @children
+        #TODO: by doing the x and y intersect checks here instead of recursing the children, I can save half of the comparisons
+        child.insert(id, pos) if child.intersects(pos)
+
 
   makeBranch: () =>
-    #cache current child items
-    items = @children
-
     #turn node into a leaf node
     @leaf = false
-    @children = []
 
     #create and insert new child nodes
-    nextLevel = @level + 1
-    @children[BOTTOM_LEFT] = new Node(@minX, @minY, nextLevel)
-    @children[BOTTOM_RIGHT] = new Node(@midX, @minY, nextLevel)
-    @children[TOP_LEFT] = new Node(@minX, @midY, nextLevel)
-    @children[TOP_RIGHT] = new Node(@midX, @midY, nextLevel)
+    nextLevel = @level - 1
+    @children = []
+    @children[BOTTOM_LEFT] = new Node(@minX, @minY, nextLevel, @)
+    @children[BOTTOM_RIGHT] = new Node(@midX, @minY, nextLevel, @)
+    @children[TOP_LEFT] = new Node(@minX, @midY, nextLevel, @)
+    @children[TOP_RIGHT] = new Node(@midX, @midY, nextLevel, @)
 
     #re-insert all items that were at this node
-    @insert(item) for own item in items
+    @insert(item, pos) for own item, pos of @items
+    @items = {}
     true
 
-  contains: (p) =>
-    @minX >= p.x > @maxX and @minY >= p.y > @maxY
-
-  find: (p) =>
+  print: (indent = 0) =>
     if @leaf
-      @
+      console.log(SPACES[indent] + "[LEAF #{@level}]: [#{@minX} #{@maxX}), [#{@minY} #{@maxY})")
+      console.log(id) for own id, pos of @items
     else
-      x = p.x >= @midX
-      y = p.y >= @midY
-      @children[x + 2 * y].find(p)
+      console.log(SPACES[indent] + "[BRANCH #{@level}]: [#{@minX} #{@maxX}), [#{@minY} #{@maxY})")
+      child.print(indent + 1) for own child in @children
 
+class QuadTree
+  constructor: (@numLevels, @minX, @minY, @sizeX, @sizeY) ->
+    pow = Math.pow(2, @numLevels)
 
-  insert: (p) =>
-    if @leaf
-      @children.push(p)
-      @makeBranch() if @children.length > MAX_ITEMS and @level < MAX_LEVEL
-    else
-      x = p.x >= @midX
-      y = p.y >= @midY
-      @children[x + 2 * y].insert(p)
+    #some defaults if constructor is called with only one arg
+    @minX = -pow / 2 if not @minX?
+    @minY = -pow / 2 if not @minY?
+    @sizeX = pow if not @sizeX?
+    @sizeY = pow if not @sizeY?
+
+    @xScale = @sizeX / pow
+    @yScale = @sizeY / pow
+
+    @positions = {}
+
+    @root = new Node(0, 0, @numLevels)
+
+  normalizeX: (x) =>
+    #TODO: clip these to the legal range?
+    Math.floor((x - @minX) / @xScale)
+
+  normalizeY: (y) =>
+    #TODO: clip these to the legal range?
+    Math.floor((y - @minY) / @yScale)
+
+  normalize: (minX, minY, maxX, maxY) =>
+    [@normalizeX(minX), @normalizeY(minY), @normalizeX(maxX), @normalizeY(maxY)]
+
+#  find: (minX, minY, maxX = minX, maxY = minY) =>
+
+  put: (id, minX, minY, maxX = minX, maxY = minY) =>
+    oldPosition = @positions[id]
+    newPosition = @normalize(minX, minY, maxX, maxY)
+    if oldPosition?
+      console.log("removing old position")
+    @positions[id] = newPosition
+    @root.insert(id, newPosition)
 
   print: () =>
-    if @leaf
-      console.log('[LEAF ' + @level + '] ')
-    else
-      console.log('[BRANCH ' + @level + '] ')
-    console.log("x = [#{@minX} #{@maxX}) y = [#{@minY} #{@maxY})")
-    item.print() for item in @children
+    @root.print(0)
+
+#    Bitwise AND 	a & b 	Returns a one in each bit position for which the corresponding bits of both operands are ones.
+#      Bitwise OR 	a | b 	Returns a one in each bit position for which the corresponding bits of either or both operands are ones.
+#      Bitwise XOR 	a ^ b 	Returns a one in each bit position for which the corresponding bits of either but not both operands are ones.
+#      Bitwise NOT 	~ a 	Inverts the bits of its operand.
+#  Left shift 	a << b 	Shifts a in binary representation b (< 32) bits to the left, shifting in zeros from the right.
+#  Sign-propagating right shift 	a >> b 	Shifts a in binary representation b (< 32) bits to the right, discarding bits shifted off.
+#Zero-fill right shift 	a >>> b 	Shifts a in binary representation b (< 32) bits to the right, discarding bits shifted off, and shifting in zeros from the left.
