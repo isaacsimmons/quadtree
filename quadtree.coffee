@@ -63,7 +63,7 @@ class Node
   print: (indent = 0) =>
     if @leaf
       console.log(SPACES[indent] + "[LEAF #{@level}]: [#{@minX} #{@maxX}), [#{@minY} #{@maxY})")
-      console.log(id) for own id, pos of @items
+      console.log(SPACES[indent] + "  #{id} @ (#{pos[0]} #{pos[1]} #{pos[2]} #{pos[3]})") for own id, pos of @items
     else
       console.log(SPACES[indent] + "[BRANCH #{@level}]: [#{@minX} #{@maxX}), [#{@minY} #{@maxY})")
       child.print(indent + 1) for own child in @children
