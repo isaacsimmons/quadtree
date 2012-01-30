@@ -34,10 +34,3 @@ task 'build', 'build the project', (options) ->
   coffee = spawn('coffee.cmd', args) if not coffee.pid #We have no PID. Guess that this is windows
   coffee.stdout.on 'data', (data) -> console.log data.toString().trim()
   coffee.on 'exit', () -> try fs.rmdirSync('-p')
-
-
-
-
-
-
-
