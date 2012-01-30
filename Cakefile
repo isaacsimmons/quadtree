@@ -14,6 +14,8 @@ copy = (src, dest) ->
     require('util').pump(srcfile, destfile)
 
 task 'build', 'build the project', (options) ->
+  fs.mkdirSync(build)
+
   args = ['-cb', '-o', build, '-j', 'quadtree', 'src/main/coffee']
   coffee = spawn('coffee', args)
   coffee = spawn('coffee.cmd', args) if not coffee.pid #We have no PID. Guess that this is windows
