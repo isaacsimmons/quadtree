@@ -1,5 +1,5 @@
 
-qt = new QuadTree(8)
+qt = new QuadTree(6)
 canvas = document.getElementById('test')
 r = new Renderer(canvas, qt)
 
