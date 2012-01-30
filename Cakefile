@@ -29,7 +29,7 @@ task 'build', 'build the project', (options) ->
   copy("src/display/css/#{file}", "#{build}/#{file}") for file in fs.readdirSync('src/display/css')
   copy("src/display/html/#{file}", "#{build}/#{file}") for file in fs.readdirSync('src/display/html')
 
-  args = ['-cb', '-o', build, '-j', 'test', 'src/test/coffee']
+  args = ['-cb', '-o', build, '-j', 'test', 'src/main/coffee', 'src/test/coffee']
   coffee = spawn('coffee', args)
   coffee = spawn('coffee.cmd', args) if not coffee.pid #We have no PID. Guess that this is windows
   coffee.stdout.on 'data', (data) -> console.log data.toString().trim()
