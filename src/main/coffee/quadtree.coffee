@@ -19,6 +19,7 @@ class Node
     @children = []
     @items = {}
     @numItems = 0
+    @numBigItems = 0
     @leaf = true
 
   find: (pos) =>
@@ -30,22 +31,42 @@ class Node
     ret
 
   intersects: (pos) =>
-    (pos[2] >= @minX and pos[0] < @maxX) and (pos[3] >= @minY and pos[1] < @maxY)
+    pos[2] >= @minX and pos[0] < @maxX and pos[3] >= @minY and pos[1] < @maxY
+
+  covers: (pos) =>
+    pos[0] < @midX and pos[1] < @minY and pos[2] >= @midX and pos[3] >= @midY
 
   insert: (id, pos) =>
-    if @leaf
+    if @covers(pos)
+      @bigItems[id] = pos
+      @numBigItems += 1
+    else if @leaf
       @items[id] = pos
       @numItems += 1
       @makeBranch() if @numItems > MAX_ITEMS and @level > 0
     else
       for own child in @children
-        #TODO: by doing the x and y intersect checks here instead of recursing the children, I can save half of the comparisons
+        #TODO: by doing the x and y checks here instead of child.intersects, I can save half of the comparisons
         child.insert(id, pos) if child.intersects(pos)
 
-    remove: (id) =>
-      delete @items[id]
-      #TODO: check if the leaf needs to be rolled back up
+    remove: (id, pos) =>
+      if id in @bigItems
+        #If the item is stored in our bigItems map, just remove it and we are done
+        delete @bigItems[id]
+        @numBigItems -= 1
+      else if @leaf
+        #If we are a leaf, it should be stored here
+        throw "Item not found" if not id in @items
+        delete @items[id]
+        @numItems -= 1
+        #TODO: check if this needs to be rolled back up into its parent
+      else
+        #recurse to children
+        for own child in @children
+          child.remove(id, pos) if child.intersects(pos)
 
+    #TODO: update (is that a node or a quadtree method?)
+    #TODO: do I need to store the un-normalized bounding box?
 
   makeBranch: () =>
     #turn node into a leaf node
@@ -60,8 +81,9 @@ class Node
     @children[TOP_RIGHT] = new Node(@midX, @midY, nextLevel, @)
 
     #re-insert all items that were at this node
-    @insert(item, pos) for own item, pos of @items
+    temp = @items
     @items = {}
+    @insert(item, pos) for own item, pos of temp
     true
 
   print: (indent = 0) =>
@@ -92,17 +114,13 @@ class QuadTree
     @root = new Node(0, 0, @numLevels)
 
   normalizeX: (x) =>
-    #TODO: clip these to the legal range?
     Math.floor((x - @minX) / @xScale)
 
   normalizeY: (y) =>
-    #TODO: clip these to the legal range?
     Math.floor((y - @minY) / @yScale)
 
   normalize: (minX, minY, maxX, maxY) =>
     [@normalizeX(minX), @normalizeY(minY), @normalizeX(maxX), @normalizeY(maxY)]
-
-#  find: (minX, minY, maxX = minX, maxY = minY) =>
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
     if minX < @minX or minY < @minY or maxX >= (@minX + @sizeX) or maxY >= (@minY + @sizeY)
@@ -114,13 +132,10 @@ class QuadTree
     @positions[id] = newPosition
     @root.insert(id, newPosition)
 
-
   remove: (id) =>
     pos = @positions[id]
     throw "Item not present in quadtree" if not pos?
-    leaves = @find(pos)
-    for own leaf in leaves
-      leaf.remove(id)
+    @root.remove(pos)
 
   print: () =>
     @root.print(0)
