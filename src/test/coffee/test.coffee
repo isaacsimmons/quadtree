@@ -26,6 +26,8 @@ qt.put('lima', 6, 4)
 #root.insert(new Point(2, 30))
 #
 printTree(qt)
+
+console.log(JSON.stringify(qt.find(7,5)))
 #
 #console.log(toKey(10, 5))
 #console.log(toKey(90, 5))

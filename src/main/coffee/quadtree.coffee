@@ -17,18 +17,23 @@ class Node
     @maxY = @minY + size
 
     @children = []
+
     @items = {}
     @numItems = 0
+
+    @bigItems = {}
     @numBigItems = 0
+
     @leaf = true
 
-  find: (pos) =>
-    ret = []
+  find: (pos, res = []) =>
+    res.push(id) for own id of @bigItems
     if @leaf
-      ret.push(@) if @intersects(pos)
+      res.push(id) for own id of @items
     else
-      ret.concat(child.find(pos)) for own child in @children
-    ret
+      for own child in @children
+        child.find(pos, res) if child.intersects(pos)
+    res
 
   intersects: (pos) =>
     pos[2] >= @minX and pos[0] < @maxX and pos[3] >= @minY and pos[1] < @maxY
@@ -127,6 +132,12 @@ class QuadTree
       @root.remove(id, oldPosition)
     @positions[id] = norm
     @root.insert(id, norm)
+
+  find: (minX, minY, maxX = minX, maxY = minY) =>
+    pos = @normalize([minX, minY, maxX, maxY])
+    ret = []
+    @root.find(pos, ret)
+    ret
 
   remove: (id) =>
     pos = @positions[id]
