@@ -42,6 +42,7 @@ class Node
     intersects(pos, @pos)
 
   covers: (pos) =>
+    #TODO: this needs to be something based on the relative size, not whether or not it covers (maybe in addition to a covers-type-metric?)
     pos[0] < @midX and pos[1] < @midY and pos[2] >= @midX and pos[3] >= @midY
 
   insert: (id, pos) =>

@@ -13,12 +13,14 @@ populate = (tree) ->
   tree.put('kilo', 6, 4)
   tree.put('lima', 6, 4)
 
-qt = new QuadTree(6)
-populate(qt)
-printTree(qt)
-console.log("QUADTREE: " + JSON.stringify(qt.find(6,4)))
+exports.testSearch = (test) ->
+  qt = new QuadTree(6)
+  ft = new FlatTree()
 
+  populate(qt)
+  populate(ft)
 
-ft = new FlatTree()
-populate(ft)
-console.log("FLATTREE: " + JSON.stringify(ft.find(6, 4)))
+  test.ok(qt.find(6, 4).length == ft.find(6,4).length)
+
+  test.done()
+

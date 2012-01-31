@@ -1,4 +1,5 @@
 {spawn} = require 'child_process'
+{reporters} = require 'nodeunit'
 fs = require 'fs'
 
 build = 'build'
@@ -14,9 +15,7 @@ copy = (src, dest) ->
     require('util').pump(srcfile, destfile)
 
 task 'build', 'build the project', (options) ->
-  fs.mkdirSync(build)
-
-  #TODO: if build already exists, this fails
+  try fs.mkdirSync(build)
 
   #TODO: if coffee outputs errors, they get swallowed
 
@@ -40,3 +39,6 @@ task 'build', 'build the project', (options) ->
   coffee = spawn('coffee.cmd', args) if not coffee.pid #We have no PID. Guess that this is windows
   coffee.stdout.on 'data', (data) -> console.log data.toString().trim()
   coffee.on 'exit', () -> try fs.rmdirSync('-p')
+
+task 'test', 'run nodeunit tests', (options) ->
+  reporters.default.run(["#{build}/test.js"])
