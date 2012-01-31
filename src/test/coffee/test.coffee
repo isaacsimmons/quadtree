@@ -1,3 +1,4 @@
+#More on nodeunit at https://github.com/caolan/nodeunit#readme
 
 populate = (tree) ->
   tree.put('alfa', 6, 4)
@@ -20,7 +21,7 @@ exports.testSearch = (test) ->
   populate(qt)
   populate(ft)
 
-  test.ok(qt.find(6, 4).length == ft.find(6,4).length)
+  test.equal(qt.find(6, 4).length, ft.find(6,4).length, 'Wrong number of results returned from search')
 
   test.done()
 
