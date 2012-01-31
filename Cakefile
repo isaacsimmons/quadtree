@@ -16,6 +16,10 @@ copy = (src, dest) ->
 task 'build', 'build the project', (options) ->
   fs.mkdirSync(build)
 
+  #TODO: if build already exists, this fails
+
+  #TODO: if coffee outputs errors, they get swallowed
+
   args = ['-cb', '-o', build, '-j', 'quadtree', 'src/main/coffee']
   coffee = spawn('coffee', args)
   coffee = spawn('coffee.cmd', args) if not coffee.pid #We have no PID. Guess that this is windows

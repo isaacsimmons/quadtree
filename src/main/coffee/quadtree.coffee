@@ -1,5 +1,14 @@
 MAX_ITEMS = 10
 
+intersects = (p1, p2) ->
+  #TODO: double check edge conditions -- make sure I don't have p1 and p2 reversed
+  p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
+
+#TODO: better name
+intersects2 = (p1, p2) ->
+  p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
+
+
 class Node
   constructor: (@minX, @minY, @level, @parent = null) ->
     #TODO: do I care about the parent pointer?
@@ -8,6 +17,7 @@ class Node
     @midY = @minY + size / 2
     @maxX = @minX + size
     @maxY = @minY + size
+    @pos = [@minX, @minY, @maxX, @maxY]
 
     @children = []
 
@@ -19,7 +29,7 @@ class Node
 
     @leaf = true
 
-  find: (pos, res = []) =>
+  find: (pos, res) =>
     res.push(id) for own id of @bigItems
     if @leaf
       res.push(id) for own id of @items
@@ -29,10 +39,10 @@ class Node
     res
 
   intersects: (pos) =>
-    pos[2] >= @minX and pos[0] < @maxX and pos[3] >= @minY and pos[1] < @maxY
+    intersects(pos, @pos)
 
   covers: (pos) =>
-    pos[0] < @midX and pos[1] < @minY and pos[2] >= @midX and pos[3] >= @midY
+    pos[0] < @midX and pos[1] < @midY and pos[2] >= @midX and pos[3] >= @midY
 
   insert: (id, pos) =>
     if @covers(pos)
@@ -97,7 +107,7 @@ class QuadTree
     @xScale = @sizeX / pow
     @yScale = @sizeY / pow
 
-    @positions = {}
+    @positions = {} #TODO: nodes need to keep normalized positions. Not sure quadtree does as well
     @rawPositions = {}
 
     @root = new Node(0, 0, @numLevels)
@@ -127,9 +137,15 @@ class QuadTree
     @root.insert(id, norm)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
-    pos = @normalize([minX, minY, maxX, maxY])
+    pos = [minX, minY, maxX, maxY]
+    norm = @normalize(pos)
+    filter = []
+    @root.find(norm, filter)
     ret = []
-    @root.find(pos, ret)
+    console.log("Got #{filter.length} candidate matches")
+    for own id in filter
+      ret.push(id) if intersects2(@rawPositions[id], pos)
+    console.log("#{ret.length} matched")
     ret
 
   remove: (id) =>
