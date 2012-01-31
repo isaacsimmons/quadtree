@@ -100,29 +100,37 @@ class QuadTree
     @yScale = @sizeY / pow
 
     @positions = {}
+    @rawPositions = {}
 
     @root = new Node(0, 0, @numLevels)
 
-  normalizeX: (x) =>
-    Math.floor((x - @minX) / @xScale)
-
-  normalizeY: (y) =>
-    Math.floor((y - @minY) / @yScale)
-
-  normalize: (minX, minY, maxX, maxY) =>
-    [@normalizeX(minX), @normalizeY(minY), @normalizeX(maxX), @normalizeY(maxY)]
+  normalize: (pos) =>
+    [ Math.floor((pos[0] - @minX) / @xScale),
+      Math.floor((pos[1] - @minY) / @yScale),
+      Math.floor((pos[2] - @minX) / @xScale),
+      Math.floor((pos[3] - @minY) / @yScale)
+    ]
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
     if minX < @minX or minY < @minY or maxX >= (@minX + @sizeX) or maxY >= (@minY + @sizeY)
       throw "coordinate out of bounds for quadtree"
+    newPosition = [minX, minY, maxX, maxY]
+    norm = @normalize(newPosition)
+    @rawPositions[id] = newPosition
     oldPosition = @positions[id]
-    newPosition = @normalize(minX, minY, maxX, maxY)
     if oldPosition?
+      if norm is oldPosition
+        console.log('new position is same as old')
+        return
       console.log("removing old position")
-    @positions[id] = newPosition
-    @root.insert(id, newPosition)
+      #TODO: could be much more efficient than remove + reinsert
+      @root.remove(id, oldPosition)
+    @positions[id] = norm
+    @root.insert(id, norm)
 
   remove: (id) =>
     pos = @positions[id]
+    delete @positions[id]
+    delete @rawPositions[id]
     throw "Item not present in quadtree" if not pos?
     @root.remove(pos)
