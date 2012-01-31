@@ -1,12 +1,5 @@
 MAX_ITEMS = 10
 
-BOTTOM_LEFT = 0
-BOTTOM_RIGHT = 1
-TOP_LEFT = 2
-TOP_RIGHT = 3
-
-SPACES = ['', ' ', '  ', '   ', '    ', '     ', '      ', '       ', '        ']
-
 class Node
   constructor: (@minX, @minY, @level, @parent = null) ->
     #TODO: do I care about the parent pointer?
@@ -80,10 +73,10 @@ class Node
     #create and insert new child nodes
     nextLevel = @level - 1
     @children = []
-    @children[BOTTOM_LEFT] = new Node(@minX, @minY, nextLevel, @)
-    @children[BOTTOM_RIGHT] = new Node(@midX, @minY, nextLevel, @)
-    @children[TOP_LEFT] = new Node(@minX, @midY, nextLevel, @)
-    @children[TOP_RIGHT] = new Node(@midX, @midY, nextLevel, @)
+    @children[0] = new Node(@minX, @minY, nextLevel, @)
+    @children[1] = new Node(@midX, @minY, nextLevel, @)
+    @children[2] = new Node(@minX, @midY, nextLevel, @)
+    @children[3] = new Node(@midX, @midY, nextLevel, @)
 
     #re-insert all items that were at this node
     temp = @items

@@ -1,3 +1,5 @@
+SPACES = ['', ' ', '  ', '   ', '    ', '     ', '      ', '       ', '        ']
+
 printNode = (node, indent = 0) ->
   if node.leaf
     console.log(SPACES[indent] + "[LEAF #{node.level}]: [#{node.minX} #{node.maxX}), [#{node.minY} #{node.maxY})")
