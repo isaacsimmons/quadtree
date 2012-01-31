@@ -25,7 +25,7 @@ qt.put('lima', 6, 4)
 #root.insert(new Point(2, 4))
 #root.insert(new Point(2, 30))
 #
-qt.print()
+printTree(qt)
 #
 #console.log(toKey(10, 5))
 #console.log(toKey(90, 5))

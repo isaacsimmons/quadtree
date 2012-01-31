@@ -86,14 +86,6 @@ class Node
     @insert(item, pos) for own item, pos of temp
     true
 
-  print: (indent = 0) =>
-    if @leaf
-      console.log(SPACES[indent] + "[LEAF #{@level}]: [#{@minX} #{@maxX}), [#{@minY} #{@maxY})")
-      console.log(SPACES[indent] + "  #{id} @ (#{pos[0]} #{pos[1]} #{pos[2]} #{pos[3]})") for own id, pos of @items
-    else
-      console.log(SPACES[indent] + "[BRANCH #{@level}]: [#{@minX} #{@maxX}), [#{@minY} #{@maxY})")
-      child.print(indent + 1) for own child in @children
-
 class QuadTree
   constructor: (@numLevels, @minX, @minY, @sizeX, @sizeY) ->
     pow = Math.pow(2, @numLevels)
@@ -101,8 +93,6 @@ class QuadTree
     #some defaults if constructor is called with only one arg
     @minX = 0 if not @minX?
     @minY = 0 if not @minY?
-#    @minX = -pow / 2 if not @minX?
-#    @minY = -pow / 2 if not @minY?
     @sizeX = pow if not @sizeX?
     @sizeY = pow if not @sizeY?
 
@@ -136,6 +126,3 @@ class QuadTree
     pos = @positions[id]
     throw "Item not present in quadtree" if not pos?
     @root.remove(pos)
-
-  print: () =>
-    @root.print(0)
