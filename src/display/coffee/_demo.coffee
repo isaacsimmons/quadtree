@@ -32,6 +32,4 @@ qt.put('xray', 36, 4)
 qt.put('yankee', 36, 4)
 qt.put('zulu', 36, 4)
 
-printTree(qt)
-
 r.draw()
