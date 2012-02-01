@@ -8,16 +8,12 @@ intersects = (p1, p2) ->
 intersects2 = (p1, p2) ->
   p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
 
-
 class Node
-  constructor: (@minX, @minY, @level, @parent = null) ->
-    #TODO: do I care about the parent pointer?
-    size = Math.pow(2, level)
-    @midX = @minX + size / 2
-    @midY = @minY + size / 2
-    @maxX = @minX + size
-    @maxY = @minY + size
-    @pos = [@minX, @minY, @maxX, @maxY]
+  constructor: (minX, minY, maxX, maxY, @depth, @parent = null) ->
+    #TODO: do I care about the parent pointer? (certainly not until I start deleting nodes)
+    @midX = (minX + maxX) / 2
+    @midY = (minY + maxY) / 2
+    @bounds = [minX, minY, maxX, maxY]
 
     @children = []
 
@@ -39,7 +35,7 @@ class Node
     res
 
   intersects: (pos) =>
-    intersects(pos, @pos)
+    intersects(pos, @bounds)
 
   covers: (pos) =>
     #TODO: this needs to be something based on the relative size, not whether or not it covers (maybe in addition to a covers-type-metric?)
@@ -52,7 +48,7 @@ class Node
     else if @leaf
       @items[id] = pos
       @numItems += 1
-      @makeBranch() if @numItems > MAX_ITEMS and @level > 0
+      @makeBranch() if @numItems > MAX_ITEMS and @depth > 0
     else
       for own child in @children
         #TODO: by doing the x and y checks here instead of child.intersects, I can save half of the comparisons
@@ -82,76 +78,55 @@ class Node
     @leaf = false
 
     #create and insert new child nodes
-    nextLevel = @level - 1
+    nextdepth = @depth - 1
     @children = []
-    @children[0] = new Node(@minX, @minY, nextLevel, @)
-    @children[1] = new Node(@midX, @minY, nextLevel, @)
-    @children[2] = new Node(@minX, @midY, nextLevel, @)
-    @children[3] = new Node(@midX, @midY, nextLevel, @)
+    @children[0] = new Node(@bounds[0], @bounds[1], @midX, @midY, nextdepth, @)
+    @children[1] = new Node(@bounds[0], @midY, @midX, @bounds[3], nextdepth, @)
+    @children[2] = new Node(@midX, @bounds[1], @bounds[2], @midY, nextdepth, @)
+    @children[3] = new Node(@midX, @midY, @bounds[2], @bounds[3], nextdepth, @)
 
     #re-insert all items that were at this node
     temp = @items
+    #TODO: might not need to move this map to temp
     @items = {}
     @insert(item, pos) for own item, pos of temp
     true
 
 class QuadTree
-  constructor: (@numLevels, @minX, @minY, @sizeX, @sizeY) ->
-    pow = Math.pow(2, @numLevels)
-
-    #some defaults if constructor is called with only one arg
-    @minX = 0 if not @minX?
-    @minY = 0 if not @minY?
-    @sizeX = pow if not @sizeX?
-    @sizeY = pow if not @sizeY?
-
-    @xScale = @sizeX / pow
-    @yScale = @sizeY / pow
-
-    @positions = {} #TODO: nodes need to keep normalized positions. Not sure quadtree does as well
-    @rawPositions = {}
-
-    @root = new Node(0, 0, @numLevels)
-
-  normalize: (pos) =>
-    [ Math.floor((pos[0] - @minX) / @xScale),
-      Math.floor((pos[1] - @minY) / @yScale),
-      Math.floor((pos[2] - @minX) / @xScale),
-      Math.floor((pos[3] - @minY) / @yScale)
-    ]
+  constructor: (@numLevels, minX, minY, maxX, maxY) ->
+    @bounds = [minX, minY, maxX, maxY]
+    @positions = {}
+    @root = new Node(minX, minY, maxX, maxY, @numLevels)
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
     if minX < @minX or minY < @minY or maxX >= (@minX + @sizeX) or maxY >= (@minY + @sizeY)
       throw "coordinate out of bounds for quadtree"
     newPosition = [minX, minY, maxX, maxY]
-    norm = @normalize(newPosition)
-    @rawPositions[id] = newPosition
     oldPosition = @positions[id]
     if oldPosition?
-      if norm is oldPosition
+      if newPosition is oldPosition
         console.log('new position is same as old')
+        #TODO: really, I want to check if it is still contained within the same boxes, not if it is identical
         return
       console.log("removing old position")
       #TODO: could be much more efficient than remove + reinsert
       @root.remove(id, oldPosition)
-    @positions[id] = norm
-    @root.insert(id, norm)
+    @positions[id] = newPosition
+    @root.insert(id, newPosition)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
     pos = [minX, minY, maxX, maxY]
-    norm = @normalize(pos)
     filter = []
-    @root.find(norm, filter)
+    @root.find(pos, filter)
     ret = []
     console.log("Got #{filter.length} candidate matches")
     for own id in filter
-      ret.push(id) if intersects2(@rawPositions[id], pos)
+      ret.push(id) if intersects2(@positions[id], pos)
     console.log("#{ret.length} matched")
     ret
 
   remove: (id) =>
+    throw "Item not present in quadtree" if not id in positions
     pos = @positions[id]
     delete @positions[id]
-    delete @rawPositions[id]
-    throw "Item not present in quadtree" if not pos?
     @root.remove(pos)

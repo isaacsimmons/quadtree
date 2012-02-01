@@ -3,9 +3,9 @@ class Renderer
   constructor: (@canvas, @quad, @scale = 1) ->
     @context = @canvas.getContext('2d')
     @context.linewidth = 2
-    @xscale = @canvas.width / @quad.sizeX
-    @yscale = @canvas.height / @quad.sizeY
-    console.log("width: #{@canvas.width}, sizex: #{@quad.sizeX}")
+    @xscale = @canvas.width / (@quad.bounds[2] - @quad.bounds[0])
+    @yscale = @canvas.height / (@quad.bounds[3] - @quad.bounds[1])
+    console.log("width: #{@canvas.width}, sizex: #{@quad.bounds[2] - @quad.bounds[0]}")
     console.log("xscale: #{@xscale}, yscale: #{@yscale}")
 
   drawbox: (pos, linecolor = 'black', bgcolor = 'white') =>
@@ -20,7 +20,7 @@ class Renderer
     @context.fillRect(0, 0, @canvas.width, @canvas.height)
 
   drawnode: (node) =>
-    @drawbox([node.minX, node.minY, node.maxX, node.maxY])
+    @drawbox([node.bounds[0], node.bounds[1], node.bounds[2], node.bounds[3]])
     @drawnode(child) for own child in node.children
 
   draw: (query) =>
