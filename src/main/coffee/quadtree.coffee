@@ -1,5 +1,3 @@
-MAX_ITEMS = 10
-
 intersects = (p1, p2) ->
   #TODO: double check edge conditions -- make sure I don't have p1 and p2 reversed
   p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
@@ -36,7 +34,8 @@ class Node
 
   covers: (pos) =>
     #TODO: this needs to be something based on the relative size, not whether or not it covers (maybe in addition to a covers-type-metric?)
-    pos[0] < @midX and pos[1] < @midY and pos[2] >= @midX and pos[3] >= @midY
+#    pos[0] < @midX and pos[1] < @midY and pos[2] >= @midX and pos[3] >= @midY
+    pos[0] <= @bounds[0] and pos[1] <= @bounds[1] and pos[2] >= @bounds[2] and pos[3] >= @bounds[3]
 
   insert: (id, pos) =>
     if @covers(pos)
