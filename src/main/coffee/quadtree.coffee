@@ -4,16 +4,11 @@ intersects = (p1, p2) ->
   #TODO: double check edge conditions -- make sure I don't have p1 and p2 reversed
   p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
 
-#TODO: better name
-intersects2 = (p1, p2) ->
-  p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
-
 class Node
-  constructor: (minX, minY, maxX, maxY, @depth, @parent = null) ->
+  constructor: (@bounds, @depth, @quadtree, @parent) ->
     #TODO: do I care about the parent pointer? (certainly not until I start deleting nodes)
-    @midX = (minX + maxX) / 2
-    @midY = (minY + maxY) / 2
-    @bounds = [minX, minY, maxX, maxY]
+    @midX = (@bounds[0] + @bounds[2]) / 2
+    @midY = (@bounds[1] + @bounds[3]) / 2
 
     @children = []
 
@@ -26,9 +21,11 @@ class Node
     @leaf = true
 
   find: (pos, res) =>
-    res.push(id) for own id of @bigItems
+    for own id of @bigItems
+      res.push(id) if (intersects(@quadtree.positions[id], pos))
     if @leaf
-      res.push(id) for own id of @items
+      for own id of @items
+        res.push(id) if (intersects(@quadtree.positions[id], pos))
     else
       for own child in @children
         child.find(pos, res) if child.intersects(pos)
@@ -46,9 +43,9 @@ class Node
       @bigItems[id] = pos
       @numBigItems += 1
     else if @leaf
-      @items[id] = pos
+      @items[id] = pos #TODO: I don't really need to store these here with the pointer back to the tree
       @numItems += 1
-      @makeBranch() if @numItems > MAX_ITEMS and @depth > 0
+      @makeBranch() if @numItems > @quadtree.maxItems and @depth < @quadtree.maxDepth
     else
       for own child in @children
         #TODO: by doing the x and y checks here instead of child.intersects, I can save half of the comparisons
@@ -71,19 +68,18 @@ class Node
           child.remove(id, pos) if child.intersects(pos)
 
     #TODO: update (is that a node or a quadtree method?)
-    #TODO: do I need to store the un-normalized bounding box?
 
   makeBranch: () =>
-    #turn node into a leaf node
+    #turn node into a branch node
     @leaf = false
 
     #create and insert new child nodes
-    nextdepth = @depth - 1
-    @children = []
-    @children[0] = new Node(@bounds[0], @bounds[1], @midX, @midY, nextdepth, @)
-    @children[1] = new Node(@bounds[0], @midY, @midX, @bounds[3], nextdepth, @)
-    @children[2] = new Node(@midX, @bounds[1], @bounds[2], @midY, nextdepth, @)
-    @children[3] = new Node(@midX, @midY, @bounds[2], @bounds[3], nextdepth, @)
+    @children = [
+      new Node([@bounds[0], @bounds[1], @midX, @midY], @depth + 1, @quadtree, @),
+      new Node([@bounds[0], @midY, @midX, @bounds[3]], @depth + 1, @quadtree, @),
+      new Node([@midX, @bounds[1], @bounds[2], @midY], @depth + 1, @quadtree, @),
+      new Node([@midX, @midY, @bounds[2], @bounds[3]], @depth + 1, @quadtree, @)
+    ]
 
     #re-insert all items that were at this node
     temp = @items
@@ -93,21 +89,23 @@ class Node
     true
 
 class QuadTree
-  constructor: (@numLevels, minX, minY, maxX, maxY) ->
-    @bounds = [minX, minY, maxX, maxY]
+  constructor: (@bounds, @maxDepth, @maxItems = 10) ->
+    if @bounds[0] >= @bounds[2] or @bounds[1] >= @bounds[3]
+      throw "Illegal bounding box for quadtree"
     @positions = {}
-    @root = new Node(minX, minY, maxX, maxY, @numLevels)
+    @root = new Node(@bounds, 0, @, null)
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
-    if minX < @minX or minY < @minY or maxX >= (@minX + @sizeX) or maxY >= (@minY + @sizeY)
+    #Repair ordering if passed in incorrectly
+    [minX, maxX] = [maxX, minX] if minX > maxX
+    [minY, maxY] = [maxY, minY] if minY > maxY
+
+    if minX < @bounds[0] or minY < @bounds[1] or maxX >= @bounds[2] or maxY >= @bounds[3]
       throw "coordinate out of bounds for quadtree"
+
     newPosition = [minX, minY, maxX, maxY]
     oldPosition = @positions[id]
     if oldPosition?
-      if newPosition is oldPosition
-        console.log('new position is same as old')
-        #TODO: really, I want to check if it is still contained within the same boxes, not if it is identical
-        return
       console.log("removing old position")
       #TODO: could be much more efficient than remove + reinsert
       @root.remove(id, oldPosition)
@@ -115,14 +113,15 @@ class QuadTree
     @root.insert(id, newPosition)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
-    pos = [minX, minY, maxX, maxY]
-    filter = []
-    @root.find(pos, filter)
+    #Repair ordering if passed in incorrectly
+    [minX, maxX] = [maxX, minX] if minX > maxX
+    [minY, maxY] = [maxY, minY] if minY > maxY
+
+    #TODO: should be safe to search outside of the tree area -- make sure that is true
+
     ret = []
-    console.log("Got #{filter.length} candidate matches")
-    for own id in filter
-      ret.push(id) if intersects2(@positions[id], pos)
-    console.log("#{ret.length} matched")
+    @root.find([minX, minY, maxX, maxY], ret)
+    console.log("#{ret.length} matches")
     ret
 
   remove: (id) =>
@@ -130,3 +129,4 @@ class QuadTree
     pos = @positions[id]
     delete @positions[id]
     @root.remove(pos)
+    true

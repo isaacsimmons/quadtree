@@ -3,7 +3,7 @@ class FlatTree
     @items = {}
 
   intersects: (p1, p2) ->
-    p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
+    p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
     @items[id] = [minX, minY, maxX, maxY]

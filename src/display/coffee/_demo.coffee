@@ -1,5 +1,5 @@
 
-qt = new QuadTree(6, 0, 0, 40, 40)
+qt = new QuadTree([0, 0, 40, 40], 6)
 canvas = document.getElementById('test')
 r = new Renderer(canvas, qt)
 
@@ -31,5 +31,7 @@ qt.put('whiskey', 36, 4)
 qt.put('xray', 36, 4)
 qt.put('yankee', 36, 4)
 qt.put('zulu', 36, 4)
+
+printTree(qt)
 
 r.draw()
