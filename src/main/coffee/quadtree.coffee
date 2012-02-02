@@ -4,8 +4,7 @@ intersects = (p1, p2) ->
   p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
 
 class Node
-  constructor: (@bounds, @depth, @quadtree, @parent) ->
-    #TODO: do I care about the parent pointer? (certainly not until I start deleting nodes)
+  constructor: (@bounds, @depth, @quadtree) ->
     @midPoint = [(@bounds[0] + @bounds[2]) / 2, (@bounds[1] + @bounds[3]) / 2]
 
     @children = []
@@ -138,10 +137,10 @@ class Node
 
     #create and insert new child nodes
     @children = [
-      new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree, @),
-      new Node([@bounds[0], @midPoint[1], @midPoint[0], @bounds[3]], @depth + 1, @quadtree, @),
-      new Node([@midPoint[0], @bounds[1], @bounds[2], @midPoint[1]], @depth + 1, @quadtree, @),
-      new Node([@midPoint[0], @midPoint[1], @bounds[2], @bounds[3]], @depth + 1, @quadtree, @)
+      new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree),
+      new Node([@bounds[0], @midPoint[1], @midPoint[0], @bounds[3]], @depth + 1, @quadtree),
+      new Node([@midPoint[0], @bounds[1], @bounds[2], @midPoint[1]], @depth + 1, @quadtree),
+      new Node([@midPoint[0], @midPoint[1], @bounds[2], @bounds[3]], @depth + 1, @quadtree)
     ]
 
     #re-insert all items that were at this node
@@ -157,7 +156,7 @@ class QuadTree
     if @bounds[0] >= @bounds[2] or @bounds[1] >= @bounds[3]
       throw "Illegal bounding box for quadtree"
     @positions = {}
-    @root = new Node(@bounds, 0, @, null)
+    @root = new Node(@bounds, 0, @)
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
     #Repair ordering if passed in incorrectly
