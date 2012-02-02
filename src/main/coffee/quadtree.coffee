@@ -53,9 +53,6 @@ class Node
   remove: (id, pos) =>
     throw "PRECONDITION: pos intersects node for remove" if not @intersects(pos)
 
-    console.log("Removing #{id} from")
-    printOneNode(@)
-
     if id in @bigItems
       #If the item is stored in our bigItems map, just remove it and we are done
       #this serves as a cheap test for @covers
