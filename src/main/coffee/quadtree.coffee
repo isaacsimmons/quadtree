@@ -50,23 +50,23 @@ class Node
         #TODO: by doing the x and y checks here instead of child.intersects, I can save half of the comparisons
         child.insert(id, pos) if child.intersects(pos)
 
-    remove: (id, pos) =>
-      if id in @bigItems
-        #If the item is stored in our bigItems map, just remove it and we are done
-        delete @bigItems[id]
-        @numBigItems -= 1
-      else if @leaf
-        #If we are a leaf, it should be stored here
-        throw "Item not found" if not id in @items
-        delete @items[id]
-        @numItems -= 1
-        #TODO: check if this needs to be rolled back up into its parent
-      else
-        #recurse to children
-        for own child in @children
-          child.remove(id, pos) if child.intersects(pos)
+  remove: (id, pos) =>
+    if id in @bigItems
+      #If the item is stored in our bigItems map, just remove it and we are done
+      delete @bigItems[id]
+      @numBigItems -= 1
+    else if @leaf
+      #If we are a leaf, it should be stored here
+      throw "Item not found" if not id in @items
+      delete @items[id]
+      @numItems -= 1
+      #TODO: check if this needs to be rolled back up into its parent
+    else
+      #recurse to children
+      for own child in @children
+        child.remove(id, pos) if child.intersects(pos)
 
-    #TODO: update (is that a node or a quadtree method?)
+  #TODO: update (is that a node or a quadtree method?)
 
   makeBranch: () =>
     #turn node into a branch node
@@ -122,7 +122,7 @@ class QuadTree
     ret
 
   remove: (id) =>
-    throw "Item not present in quadtree" if not id in positions
+    throw "Item not present in quadtree" if not id in @positions
     pos = @positions[id]
     delete @positions[id]
     @root.remove(id, pos)
