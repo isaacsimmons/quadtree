@@ -37,37 +37,53 @@ class Node
     pos[0] <= @bounds[0] and pos[1] <= @bounds[1] and pos[2] >= @bounds[2] and pos[3] >= @bounds[3]
 
   insert: (id, pos) =>
-    #TODO: remove these precondition checks
     throw "PRECONDITION: pos intersects node for insert" if not @intersects(pos)
-    @numItems += 1
-    #PRECONDITION pos intersects
+
+    #TODO: should numItems *not* count bigItems?
     if @covers(pos)
       @bigItems[id] = pos
-    else if @leaf
-      @items[id] = pos #TODO: I don't really need to store these here with the pointer back to the tree
-      @makeBranch() if @numItems > @quadtree.maxItems and @depth < @quadtree.maxDepth
     else
-      for own child in @children
-        #TODO: by doing the x and y checks here instead of child.intersects, I can save half of the comparisons
-        child.insert(id, pos) if child.intersects(pos)
+      @numItems += 1
+
+      if @leaf
+        @items[id] = pos #TODO: I don't really need to store these here with the pointer back to the tree
+        @makeBranch() if @numItems > @quadtree.maxItems and @depth < @quadtree.maxDepth
+      else
+        for own child in @children
+          child.insert(id, pos) if child.intersects(pos)
 
   remove: (id, pos) =>
     throw "PRECONDITION: pos intersects node for remove" if not @intersects(pos)
-    #PRECONDITION pos intersects
-    @numItems -= 1
+
+    console.log("Removing #{id} from")
+    printOneNode(@)
+
     if id in @bigItems
       #If the item is stored in our bigItems map, just remove it and we are done
       #this serves as a cheap test for @covers
       delete @bigItems[id]
-    else if @leaf
-      #If we are a leaf, it should be stored here
-      throw "Item not found" if not id in @items
-      delete @items[id]
-      #TODO: check if this needs to be rolled back up into its parent
     else
-      #recurse to children
-      for own child in @children
-        child.remove(id, pos) if child.intersects(pos)
+      @numItems -= 1
+      if @leaf
+        #If we are a leaf, it should be stored here
+        throw "Item not found" if not id in @items
+        delete @items[id]
+        #TODO: check if this needs to be rolled back up into its parent
+      else
+        #recurse to children
+        for own child in @children
+          child.remove(id, pos) if child.intersects(pos)
+      @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
+
+  makeLeaf: () =>
+    @leaf = true
+    for own child in @children
+      child.makeLeaf() if not child.leaf
+      for own id, pos in child.bigItems
+        @items[id] = pos #if not id in @items  #Not sure if I should bother with this if -- probably no slower to just overwrite
+      for own id, pos in child.items
+        @items[id] = pos
+    @children = []
 
   update: (id, oldpos, newpos) =>
     throw "PRECONDITION: oldpos intersects node for update" if not @intersects(oldpos)
@@ -81,7 +97,6 @@ class Node
       else
         #used to cover, doesn't anymore
         delete @bigItems[id]
-        @numBigItems -= 1
         @insert(id, newpos)
     else #not @covers(oldpos)
       if @covers(newpos)
@@ -90,7 +105,6 @@ class Node
         @remove(id, oldpos)
 
         @bigItems[id] = newpos
-        @numBigItems += 1
       else
         #didnt cover before, doesn't now
         if @leaf
@@ -111,8 +125,6 @@ class Node
                 child.insert(id, newpos)
               else
                 #didnt intersect before, doesn't now -- nothing to do
-
-
 
 
   intersecttest: (pos) =>
@@ -136,6 +148,7 @@ class Node
     #re-insert all items that were at this node
     temp = @items
     @items = {}
+    @numItems = 0
     @insert(item, pos) for own item, pos of temp
     #TODO: do I need this temp assignment?
     true
@@ -178,7 +191,6 @@ class QuadTree
 
   remove: (id) =>
     throw "Item not present in quadtree" if not id in @positions
-    pos = @positions[id]
+    @root.remove(id, @positions[id])
     delete @positions[id]
-    @root.remove(id, pos)
     true
