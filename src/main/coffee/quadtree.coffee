@@ -125,5 +125,5 @@ class QuadTree
     throw "Item not present in quadtree" if not id in positions
     pos = @positions[id]
     delete @positions[id]
-    @root.remove(pos)
+    @root.remove(id, pos)
     true
