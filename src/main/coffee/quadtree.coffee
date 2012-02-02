@@ -1,5 +1,6 @@
 intersects = (p1, p2) ->
   #TODO: double check edge conditions -- make sure I don't have p1 and p2 reversed
+  #TODO: move this into Node?
   p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
 
 class Node
@@ -33,8 +34,7 @@ class Node
     intersects(pos, @bounds)
 
   covers: (pos) =>
-    #TODO: this needs to be something based on the relative size, not whether or not it covers (maybe in addition to a covers-type-metric?)
-#    pos[0] < @midX and pos[1] < @midY and pos[2] >= @midX and pos[3] >= @midY
+    #TODO: consider other options for this
     pos[0] <= @bounds[0] and pos[1] <= @bounds[1] and pos[2] >= @bounds[2] and pos[3] >= @bounds[3]
 
   insert: (id, pos) =>
@@ -81,10 +81,8 @@ class Node
     ]
 
     #re-insert all items that were at this node
-    temp = @items
-    #TODO: might not need to move this map to temp
+    @insert(item, pos) for own item, pos of @items
     @items = {}
-    @insert(item, pos) for own item, pos of temp
     true
 
 class QuadTree
