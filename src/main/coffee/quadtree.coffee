@@ -138,6 +138,7 @@ class Node
 
     #re-insert all items that were at this node
     temp = @items
+    @numItems = 0
     @items = {}
     @insert(item, pos) for own item, pos of temp
     #TODO: do I need this temp assignment?
