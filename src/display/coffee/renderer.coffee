@@ -17,6 +17,7 @@ class Renderer
     @context.strokeRect(pos[0], pos[1], pos[2] - pos[0], pos[3] - pos[1])
 
   clear: () =>
+    #TODO: clearRect too?
     @context.fillStyle = "blue"
     @context.fillRect(0, 0, @canvas.width, @canvas.height)
 
