@@ -16,23 +16,23 @@ class Node
 
     @leaf = true
 
-  find: (pos, res) =>
-    for own id of @bigItems
-      res.push(id) if (intersects(@quadtree.positions[id], pos))
+  find: (q, res) =>
+    for own id, pos of @bigItems
+      res.push(id) if intersects(pos, q)
     if @leaf
-      for own id of @items
-        res.push(id) if (intersects(@quadtree.positions[id], pos))
+      for own id, pos of @items
+        res.push(id) if intersects(pos, q)
     else
       for own child in @children
-        child.find(pos, res) if child.intersects(pos)
+        child.find(q, res) if child.intersects(q)
     res
 
-  intersects: (pos) =>
-    intersects(pos, @bounds)
+  intersects: (q) =>
+    intersects(q, @bounds)
 
-  covers: (pos) =>
+  covers: (q) =>
     #TODO: consider other options for this
-    pos[0] <= @bounds[0] and pos[1] <= @bounds[1] and pos[2] >= @bounds[2] and pos[3] >= @bounds[3]
+    q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
 
   insert: (id, pos) =>
     throw "PRECONDITION: pos intersects node for insert" if not @intersects(pos)
@@ -122,7 +122,7 @@ class Node
                 #didnt intersect before, doesn't now -- nothing to do
 
 
-  intersecttest: (pos) =>
+  intersecttest: (q) =>
     #TODO: write this, use in find/insert/update to reduce number of checks run
     #TODO: can I simplify somewhat if I know that intersects_self is true?
     [covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3]
