@@ -6,8 +6,7 @@ intersects = (p1, p2) ->
 class Node
   constructor: (@bounds, @depth, @quadtree, @parent) ->
     #TODO: do I care about the parent pointer? (certainly not until I start deleting nodes)
-    @midX = (@bounds[0] + @bounds[2]) / 2
-    @midY = (@bounds[1] + @bounds[3]) / 2
+    @midPoint = [(@bounds[0] + @bounds[2]) / 2, (@bounds[1] + @bounds[3]) / 2]
 
     @children = []
 
@@ -139,10 +138,10 @@ class Node
 
     #create and insert new child nodes
     @children = [
-      new Node([@bounds[0], @bounds[1], @midX, @midY], @depth + 1, @quadtree, @),
-      new Node([@bounds[0], @midY, @midX, @bounds[3]], @depth + 1, @quadtree, @),
-      new Node([@midX, @bounds[1], @bounds[2], @midY], @depth + 1, @quadtree, @),
-      new Node([@midX, @midY, @bounds[2], @bounds[3]], @depth + 1, @quadtree, @)
+      new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree, @),
+      new Node([@bounds[0], @midPoint[1], @midPoint[0], @bounds[3]], @depth + 1, @quadtree, @),
+      new Node([@midPoint[0], @bounds[1], @bounds[2], @midPoint[1]], @depth + 1, @quadtree, @),
+      new Node([@midPoint[0], @midPoint[1], @bounds[2], @bounds[3]], @depth + 1, @quadtree, @)
     ]
 
     #re-insert all items that were at this node
