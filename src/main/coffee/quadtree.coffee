@@ -182,13 +182,9 @@ class QuadTree
 
     #TODO: should be safe to search outside of the tree area -- make sure that is true
 
-    ret = []
-    @root.find([minX, minY, maxX, maxY], ret)
-    console.log("#{ret.length} matches")
-    ret
+    @root.find([minX, minY, maxX, maxY], [])
 
   remove: (id) =>
     throw "Item not present in quadtree" if not id in @positions
     @root.remove(id, @positions[id])
     delete @positions[id]
-    true
