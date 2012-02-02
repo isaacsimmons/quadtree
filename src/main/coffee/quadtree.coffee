@@ -145,7 +145,7 @@ class Node
 
     #re-insert all items that were at this node
     @numItems = 0
-    @insert(item, pos) for own item, pos of temp
+    @insert(item, pos) for own item, pos of @items
     @items = {}
     true
 
