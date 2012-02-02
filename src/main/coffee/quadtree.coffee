@@ -16,6 +16,7 @@ class Node
 
     @bigItems = {}
     @numBigItems = 0
+    #TODO: not sure if I need numBigItems or not. Think about this when I start rolling empty quads back up into the parent
 
     @leaf = true
 
@@ -38,6 +39,9 @@ class Node
     pos[0] <= @bounds[0] and pos[1] <= @bounds[1] and pos[2] >= @bounds[2] and pos[3] >= @bounds[3]
 
   insert: (id, pos) =>
+    #TODO: remove these precondition checks
+    throw "PRECONDITION: pos intersects node for insert" if not @intersects(pos)
+    #PRECONDITION pos intersects
     if @covers(pos)
       @bigItems[id] = pos
       @numBigItems += 1
@@ -51,6 +55,8 @@ class Node
         child.insert(id, pos) if child.intersects(pos)
 
   remove: (id, pos) =>
+    throw "PRECONDITION: pos intersects node for remove" if not @intersects(pos)
+    #PRECONDITION pos intersects
     if id in @bigItems
       #If the item is stored in our bigItems map, just remove it and we are done
       delete @bigItems[id]
@@ -66,7 +72,57 @@ class Node
       for own child in @children
         child.remove(id, pos) if child.intersects(pos)
 
-  #TODO: update (is that a node or a quadtree method?)
+  update: (id, oldpos, newpos) =>
+    throw "PRECONDITION: oldpos intersects node for update" if not @intersects(oldpos)
+    throw "PRECONDITION: newpos intersects node for update" if not @intersects(newpos)
+    #TODO: can just check presence in bigItems as shortcut for covers(oldpos)
+    #TODO: these if/else branching trees can be cleaned up some once I know they work
+    if @covers(oldpos)
+      if @covers(newpos)
+        #used to cover node, still does -- nothing to do
+        @bigItems[id] = newpos
+      else
+        #used to cover, doesn't anymore
+        delete @bigItems[id]
+        @numBigItems -= 1
+        @insert(id, newpos)
+    else #not @covers(oldpos)
+      if @covers(newpos)
+
+        #didnt used to cover, does now
+        @remove(id, oldpos)
+
+        @bigItems[id] = newpos
+        @numBigItems += 1
+      else
+        #didnt cover before, doesn't now
+        if @leaf
+          @items[id] = newpos
+        else
+          #TODO: check if I am a leaf //Same as previous -- @children will simply be empty
+          for own child in @children
+            if child.intersects(oldpos)
+              if child.intersects(newpos)
+                #intersected before, still does
+                child.update(id, oldpos, newpos)
+              else
+                #intersected before, doesn't anymore
+                child.remove(id, oldpos)
+            else
+              if child.intersects(newpos)
+                #didn't used to intersect, does now -- insert
+                child.insert(id, newpos)
+              else
+                #didnt intersect before, doesn't now -- nothing to do
+
+
+
+
+  intersecttest: (pos) =>
+    #TODO: write this, use in find/insert/update to reduce number of checks run
+    #TODO: can I simplify somewhat if I know that intersects_self is true?
+    [covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3]
+#    [intersect_self, covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3]
 
   makeBranch: () =>
     #turn node into a branch node
@@ -81,8 +137,10 @@ class Node
     ]
 
     #re-insert all items that were at this node
-    @insert(item, pos) for own item, pos of @items
+    temp = @items
     @items = {}
+    @insert(item, pos) for own item, pos of temp
+    #TODO: do I need this temp assignment?
     true
 
 class QuadTree
@@ -102,12 +160,12 @@ class QuadTree
 
     newPosition = [minX, minY, maxX, maxY]
     oldPosition = @positions[id]
-    if oldPosition?
-      console.log("removing old position")
-      #TODO: could be much more efficient than remove + reinsert
-      @root.remove(id, oldPosition)
     @positions[id] = newPosition
-    @root.insert(id, newPosition)
+
+    if oldPosition?
+      @root.update(id, oldPosition, newPosition)
+    else
+      @root.insert(id, newPosition)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
     #Repair ordering if passed in incorrectly
