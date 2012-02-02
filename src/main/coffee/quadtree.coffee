@@ -15,8 +15,6 @@ class Node
     @numItems = 0
 
     @bigItems = {}
-    @numBigItems = 0
-    #TODO: not sure if I need numBigItems or not. Think about this when I start rolling empty quads back up into the parent
 
     @leaf = true
 
@@ -41,13 +39,12 @@ class Node
   insert: (id, pos) =>
     #TODO: remove these precondition checks
     throw "PRECONDITION: pos intersects node for insert" if not @intersects(pos)
+    @numItems += 1
     #PRECONDITION pos intersects
     if @covers(pos)
       @bigItems[id] = pos
-      @numBigItems += 1
     else if @leaf
       @items[id] = pos #TODO: I don't really need to store these here with the pointer back to the tree
-      @numItems += 1
       @makeBranch() if @numItems > @quadtree.maxItems and @depth < @quadtree.maxDepth
     else
       for own child in @children
@@ -57,15 +54,15 @@ class Node
   remove: (id, pos) =>
     throw "PRECONDITION: pos intersects node for remove" if not @intersects(pos)
     #PRECONDITION pos intersects
+    @numItems -= 1
     if id in @bigItems
       #If the item is stored in our bigItems map, just remove it and we are done
+      #this serves as a cheap test for @covers
       delete @bigItems[id]
-      @numBigItems -= 1
     else if @leaf
       #If we are a leaf, it should be stored here
       throw "Item not found" if not id in @items
       delete @items[id]
-      @numItems -= 1
       #TODO: check if this needs to be rolled back up into its parent
     else
       #recurse to children
@@ -138,7 +135,6 @@ class Node
 
     #re-insert all items that were at this node
     temp = @items
-    @numItems = 0
     @items = {}
     @insert(item, pos) for own item, pos of temp
     #TODO: do I need this temp assignment?
