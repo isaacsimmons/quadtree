@@ -79,9 +79,9 @@ class Node
     @leaf = true
     for own child in @children
       child.makeLeaf() if not child.leaf
-      for own id, pos in child.bigItems
+      for own id, pos of child.bigItems
         @items[id] = pos #if not id in @items  #Not sure if I should bother with this if -- probably no slower to just overwrite
-      for own id, pos in child.items
+      for own id, pos of child.items
         @items[id] = pos
     @children = []
 
