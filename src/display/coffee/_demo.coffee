@@ -1,88 +1,119 @@
+MAX_SIZE = 40
+BUFFER = 5
+MAX_ITEMS = 10
+MAX_LEVELS = 6
 
-qt = new QuadTree([0, 0, 40, 40], 6, 1)
+NUM_CLUSTERS = 5
+SMALL_PER_CLUSTER = 10
+MEDIUM_PER_CLUSTER = 2
+POINTS_PER_CLUSTER = 20
+
+NUM_LARGE = 15
+
+SMALL_RADIUS = 1
+MEDIUM_RADIUS = 2
+LARGE_RADIUS = 4
+CLUSTER_RADIUS = 10
+
+CLUSTER_CENTERS = []
+CLUSTER_SPEEDS = []
+
+POINTS = []
+SMALL_BOXES = []
+MEDIUM_BOXES = []
+LARGE_BOXES = []
+
+CLUSTER_SPEED = 1
+SMALL_SPEED = 2
+POINT_SPEED = 3
+
+randomCoord = (buffer = 0) ->
+  [Math.random() * (MAX_SIZE - buffer), Math.random() * (MAX_SIZE - buffer)]
+
+randomDelta = (size) ->
+  [Math.random() * 2 * size - size, Math.random() * 2 * size - size]
+
+randomPosDelta = (size) ->
+  [Math.random() * size, Math.random() * size]
+
+sum = (v1, v2) ->
+  [v1[0] + v2[0], v1[1], v2[1]]
+
+add = (v1, v2) ->
+  v1[0] += v2[0]
+  v1[1] += v2[1]
+
+initCoords = () ->
+  for large in [0...NUM_LARGE]
+    LARGE_BOXES[large] = randomCoord(LARGE_RADIUS)
+  for cluster in [0...NUM_CLUSTERS]
+    CLUSTER_CENTERS[cluster] = randomCoord(CLUSTER_RADIUS + MEDIUM_RADIUS)
+    for point in [0...POINTS_PER_CLUSTER]
+      POINTS[cluster * POINTS_PER_CLUSTER + point] = sum(CLUSTER_CENTERS[cluster], randomPosDelta(CLUSTER_RADIUS))
+    for smallitem in [0...SMALL_PER_CLUSTER]
+      SMALL_BOXES[cluster * SMALL_PER_CLUSTER + smallitem] = sum(CLUSTER_CENTERS[cluster], randomPosDelta(CLUSTER_RADIUS))
+    for mediumitem in [0...MEDIUM_PER_CLUSTER]
+      MEDIUM_BOXES[cluster * MEDIUM_PER_CLUSTER + mediumitem] = sum(CLUSTER_CENTERS[cluster], randomPosDelta(CLUSTER_RADIUS))
+    heading = Math.random() * Math.PI * 2
+    CLUSTER_SPEEDS[cluster] = [Math.sin(heading) * CLUSTER_SPEED, Math.cos(heading) * CLUSTER_SPEED]
+  true
+
+outOfRange = (p1, box, boxsize) ->
+  p1[0] > box[0] + boxsize or p1[0] < box[0] or p1[1] > box[1] + boxsize or p1[1] < box[1]
+
+driftCoords = () ->
+  for cluster in [0...NUM_CLUSTERS]
+    clusterDelta = CLUSTER_SPEEDS[cluster]
+    add(CLUSTER_CENTERS[cluster], clusterDelta)
+    if MEDIUM_RADIUS > CLUSTER_CENTERS[cluster][0] or CLUSTER_CENTERS[cluster][0] > MAX_SIZE - CLUSTER_RADIUS - MEDIUM_RADIUS or MEDIUM_RADIUS > CLUSTER_CENTERS[cluster][1] or CLUSTER_CENTERS[cluster][1] > MAX_SIZE - CLUSTER_RADIUS - MEDIUM_RADIUS
+      CLUSTER_CENTERS[cluster] = randomCoord(CLUSTER_RADIUS + MEDIUM_RADIUS)
+    for point in [0...POINTS_PER_CLUSTER]
+      i = cluster * POINTS_PER_CLUSTER + point
+      add(POINTS[i], randomDelta(POINT_SPEED))
+      POINTS[i] = sum(CLUSTER_CENTERS[cluster], randomPosDelta(CLUSTER_RADIUS)) if outOfRange(POINTS[i], CLUSTER_CENTERS[cluster], CLUSTER_RADIUS)
+    for smallitem in [0...SMALL_PER_CLUSTER]
+      i = cluster * SMALL_PER_CLUSTER + smallitem
+      add(SMALL_BOXES[i], randomDelta(SMALL_SPEED))
+      SMALL_BOXES[i] = sum(CLUSTER_CENTERS[cluster], randomPosDelta(CLUSTER_RADIUS)) if outOfRange(SMALL_BOXES[i], CLUSTER_CENTERS[cluster], CLUSTER_RADIUS)
+    for mediumitem in [0...MEDIUM_PER_CLUSTER]
+      i = cluster * MEDIUM_PER_CLUSTER + mediumitem
+      add(MEDIUM_BOXES[i], clusterDelta)
+      MEDIUM_BOXES[i] = sum(CLUSTER_CENTERS[cluster], randomPosDelta(CLUSTER_RADIUS)) if outOfRange(MEDIUM_BOXES[i], CLUSTER_CENTERS[cluster], CLUSTER_RADIUS)
+  true
+
+storeCoords = () ->
+  console.log('Storing Points...')
+#  console.log(JSON.stringify(POINTS))
+  for point, i in POINTS
+    qt.put("point#{i}", point[0], point[1])
+  console.log('Storing Small Boxes...')
+  for sbox, si in SMALL_BOXES
+    qt.put("small#{si}", sbox[0], sbox[1], sbox[0] + SMALL_RADIUS, sbox[1] + SMALL_RADIUS)
+  console.log('Storing Medium Boxes...')
+  for mbox, mi in MEDIUM_BOXES
+    qt.put("medium#{mi}", mbox[0], mbox[1], mbox[0] + MEDIUM_RADIUS, mbox[1] + MEDIUM_RADIUS)
+  console.log('Storing Large Boxes...')
+  for lbox, li in LARGE_BOXES
+    qt.put("large#{li}", lbox[0], lbox[1], lbox[0] + LARGE_RADIUS, lbox[1] + LARGE_RADIUS)
+
+tick = () ->
+  console.log('tick')
+  driftCoords()
+  storeCoords()
+  if r?
+    r.draw()
+#    r.drawBox([cluster[0], cluster[1], cluster[0] + CLUSTER_RADIUS, cluster[1] + CLUSTER_RADIUS], 'green') for cluster in CLUSTER_CENTERS
+
+
+qt = new QuadTree([0, 0, MAX_SIZE, MAX_SIZE], MAX_LEVELS, MAX_ITEMS)
 canvas = document.getElementById('test')
-r = new Renderer(canvas, qt)
+r = if canvas? then new Renderer(canvas, qt) else null
 
-offset = 0
+initCoords()
+tick()
 
-moveBoxes = () ->
-  offset += 2
-  console.log("Moving boxes (offset: #{offset})")
-  qt.put('alfa', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('bravo', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('charlie', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('delta', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('echo', 6, 4 + offset, 7, 5 + offset)
-#  qt.put('foxtrot', 6, 4 + offset, 7, 5 + offset)
-#  qt.put('golf', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('hotel', 2, 4 + offset, 21, 21 + offset)
-#  qt.put('india', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('juliet', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('kilo', 6, 4 + offset, 21, 21 + offset)
-#  qt.put('juliet1', 16 + offset, 8, 31, 25 + offset)
-#  qt.put('kilo1', 16, 8 + offset, 31, 25 + offset)
-#  qt.put('juliet2', 16, 8 + offset, 31, 25 + offset)
-#  qt.put('kilo2', 16, 8 + offset, 31, 25 + offset)
-#  qt.put('juliet3', 16, 8 + offset, 31, 25 + offset)
-#  qt.put('kilo3', 16, 8 + offset, 31, 25 + offset)
-#  qt.put('juliet4', 16, 8 + offset, 31, 25 + offset)
-#  qt.put('kilo4', 16, 8 + offset, 31, 25 + offset)
-  qt.put('lima', 6, 4 + offset, 21, 21 + offset)
-  r.draw()
-#  printTree(qt)
-
-removeBoxes = () ->
-  console.log("Removing boxes")
-  qt.remove('alfa')
-#  qt.remove('bravo')
-#  qt.remove('charlie')
-#  qt.remove('delta')
-#  qt.remove('echo')
-#  qt.remove('foxtrot')
-#  qt.remove('golf')
-#  qt.remove('hotel')
-#  qt.remove('india')
-#  qt.remove('juliet')
-#  qt.remove('kilo')
-#  qt.remove('juliet1')
-#  qt.remove('kilo1')
-#  qt.remove('juliet2')
-#  qt.remove('kilo2')
-#  qt.remove('juliet3')
-#  qt.remove('kilo3')
-#  qt.remove('juliet4')
-#  qt.remove('kilo4')
-  qt.remove('lima')
-  r.draw()
-#  printTree(qt)
-
-DEFAULT_POINT = [1.4, 2.3]
-
-movePoints = () ->
-  offset += 2
-  console.log("Moving points (offset: #{offset})")
-  for num in [0...1]
-    qt.put("point#{num}", DEFAULT_POINT[0], DEFAULT_POINT[1] + offset)
-  r.draw()
-#  printTree(qt)
+setInterval(tick, 300)
 
 
-moveBoxes()
 
-setTimeout(moveBoxes, 1000)
-setTimeout(moveBoxes, 2000)
-setTimeout(moveBoxes, 3000)
-setTimeout(moveBoxes, 4000)
-setTimeout(moveBoxes, 5000)
-setTimeout(moveBoxes, 6000)
-
-#setTimeout(removeBoxes, 7000)
-
-
-#setTimeout(movePoints, 1000)
-#setTimeout(movePoints, 2000)
-#setTimeout(movePoints, 3000)
-#setTimeout(movePoints, 4000)
-#setTimeout(movePoints, 5000)
-#setTimeout(movePoints, 6000)
 
