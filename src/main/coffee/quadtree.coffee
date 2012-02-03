@@ -7,18 +7,17 @@ class Node
   constructor: (@bounds, @depth, @quadtree) ->
     @midPoint = [(@bounds[0] + @bounds[2]) / 2, (@bounds[1] + @bounds[3]) / 2]
 
+    @leaf = true
     @children = []
 
-    @items = {}
     @numItems = 0
-
+    @items = {}
     @bigItems = {}
 
-    @leaf = true
 
   find: (q, res) =>
     for own id, pos of @bigItems
-      res.push(id) if intersects(pos, q)
+      res.push(id)# if intersects(pos, q) #TODO: make sure this really isn't necessary
 
     for own id, pos of @items
       res.push(id) if intersects(pos, q)
@@ -128,7 +127,7 @@ class Node
     #TODO: write this, use in find/insert/update to reduce number of checks run
     #TODO: can I simplify somewhat if I know that intersects_self is true?
     [covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3]
-#    [intersect_self, covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3]
+#    [intersect_self, covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3] //Nah, always intersects self?
 
   makeBranch: () =>
     #turn node into a branch node
