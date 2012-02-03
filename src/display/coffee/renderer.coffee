@@ -1,6 +1,6 @@
 
 class Renderer
-  constructor: (@canvas, @quad, @scale = 1) ->
+  constructor: (@canvas, @quad) ->
     @context = @canvas.getContext('2d')
     @context.linewidth = 2
     @xscale = @canvas.width / (@quad.bounds[2] - @quad.bounds[0])
