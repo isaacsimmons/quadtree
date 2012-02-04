@@ -35,6 +35,7 @@ class Node
     q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
 
   insert: (id, pos) =>
+    console.log("POS: #{JSON.stringify(pos)}, BOUNDS: #{JSON.stringify(@bounds)}") if not @intersects(pos)
     throw "PRECONDITION: pos intersects node for insert" if not @intersects(pos)
 
     #TODO: should numItems *not* count bigItems?
@@ -162,10 +163,13 @@ class QuadTree
     [minX, maxX] = [maxX, minX] if minX > maxX
     [minY, maxY] = [maxY, minY] if minY > maxY
 
+
+    newPosition = [minX, minY, maxX, maxY]
+
+    console.log("POS: #{JSON.stringify(newPosition)}, BOUNDS: #{JSON.stringify(@bounds)}") if not @root.intersects(newPosition)
     if minX < @bounds[0] or minY < @bounds[1] or maxX >= @bounds[2] or maxY >= @bounds[3]
       throw "coordinate out of bounds for quadtree"
 
-    newPosition = [minX, minY, maxX, maxY]
     oldPosition = @positions[id]
     @positions[id] = newPosition
 
