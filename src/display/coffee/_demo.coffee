@@ -1,3 +1,5 @@
+#TODO: extract a "Scenario" class from this, use both here and in test package
+
 MAX_SIZE = 40
 BUFFER = 5
 MAX_ITEMS = 10
@@ -82,27 +84,22 @@ driftCoords = () ->
   true
 
 storeCoords = () ->
-  console.log('Storing Points...')
-#  console.log(JSON.stringify(POINTS))
   for point, i in POINTS
     qt.put("point#{i}", point[0], point[1])
-  console.log('Storing Small Boxes...')
   for sbox, si in SMALL_BOXES
     qt.put("small#{si}", sbox[0], sbox[1], sbox[0] + SMALL_RADIUS, sbox[1] + SMALL_RADIUS)
-  console.log('Storing Medium Boxes...')
   for mbox, mi in MEDIUM_BOXES
     qt.put("medium#{mi}", mbox[0], mbox[1], mbox[0] + MEDIUM_RADIUS, mbox[1] + MEDIUM_RADIUS)
-  console.log('Storing Large Boxes...')
   for lbox, li in LARGE_BOXES
     qt.put("large#{li}", lbox[0], lbox[1], lbox[0] + LARGE_RADIUS, lbox[1] + LARGE_RADIUS)
 
 tick = () ->
-  console.log('tick')
+#  console.log('tick')
   driftCoords()
   storeCoords()
   if r?
     r.draw()
-#    r.drawBox([cluster[0], cluster[1], cluster[0] + CLUSTER_RADIUS, cluster[1] + CLUSTER_RADIUS], 'green') for cluster in CLUSTER_CENTERS
+    r.drawBox([cluster[0], cluster[1], cluster[0] + CLUSTER_RADIUS, cluster[1] + CLUSTER_RADIUS], 'red') for cluster in CLUSTER_CENTERS
 
 
 qt = new QuadTree([0, 0, MAX_SIZE, MAX_SIZE], MAX_LEVELS, MAX_ITEMS)
@@ -112,7 +109,24 @@ r = if canvas? then new Renderer(canvas, qt) else null
 initCoords()
 tick()
 
-setInterval(tick, 300)
+tickId = setInterval(tick, 1000/20)
+
+
+pause = () ->
+  if tickId?
+    clearInterval(tickId)
+    tickId = null
+  else
+    tickId = setInterval(tick, 300)
+
+print = () ->
+  out = document.getElementById('output')
+  out.innerHTML = "TREE:<br/>"
+  (out.innerHTML += line + "<br/>") for line in printTree(qt)
+
+document.getElementById('pause').onclick = pause
+document.getElementById('print').onclick = print
+
 
 
 
