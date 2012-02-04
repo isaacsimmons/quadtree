@@ -4,10 +4,10 @@ printNode = (node, ret, indent = 0) ->
   ret
 
 printOneNode = (node, ret, indent = 0) ->
-  spaces = new Array(indent).join('-')
-  ret.push(spaces + "[#{if node.leaf then "LEAF" else "BRANCH"} #{node.depth}]: [#{node.bounds[0]} #{node.bounds[2]}), [#{node.bounds[1]} #{node.bounds[3]}) {#{node.numItems}}")
-  ret.push(spaces + "BI #{id} @ (#{pos[0]} #{pos[1]} #{pos[2]} #{pos[3]})") for own id, pos of node.bigItems
-  ret.push(spaces + "I  #{id} @ (#{pos[0]} #{pos[1]} #{pos[2]} #{pos[3]})") for own id, pos of node.items
+  indent = new Array(indent).join('-')
+  ret.push(indent + "[#{if node.leaf then "LEAF" else "BRANCH"} #{node.depth}]: [#{node.bounds[0]} #{node.bounds[2]}), [#{node.bounds[1]} #{node.bounds[3]}) {#{node.numItems}}")
+  ret.push(indent + "BI #{id} @ (#{pos[0]} #{pos[1]} #{pos[2]} #{pos[3]})") for own id, pos of node.bigItems
+  ret.push(indent + "I  #{id} @ (#{pos[0]} #{pos[1]} #{pos[2]} #{pos[3]})") for own id, pos of node.items
   ret
 
 printTree = (tree) ->

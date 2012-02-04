@@ -78,8 +78,7 @@ class Node
     throw "CALLING makeLeaf on a node with too many items under it" if @numItems > (@quadtree.maxItems / 2)
     @leaf = true
     for own child in @children
-
-      child.makeLeaf() if not child.leaf  #TODO: still not sure that I understand how this condition ever happens
+      throw "Children of makeLeaf call should be leaves" if not child.leaf #TODO: make sure this assert is correct
       for own id, pos of child.bigItems
         @items[id] = pos #if not id in @items  #Not sure if I should bother with this if -- probably no slower to just overwrite
       for own id, pos of child.items
