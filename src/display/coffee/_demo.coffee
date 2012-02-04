@@ -2,7 +2,7 @@
 
 MAX_SIZE = 40
 BUFFER = 5
-MAX_ITEMS = 10
+MAX_ITEMS = 7
 MAX_LEVELS = 6
 
 NUM_CLUSTERS = 5
@@ -28,6 +28,10 @@ LARGE_BOXES = []
 CLUSTER_SPEED = 1
 SMALL_SPEED = 2
 POINT_SPEED = 3
+
+
+FRAMERATE = 20
+
 
 randomCoord = (buffer = 0) ->
   [Math.random() * (MAX_SIZE - buffer), Math.random() * (MAX_SIZE - buffer)]
@@ -109,7 +113,7 @@ r = if canvas? then new Renderer(canvas, qt) else null
 initCoords()
 tick()
 
-tickId = setInterval(tick, 1000/20)
+tickId = setInterval(tick, 1000/FRAMERATE)
 
 
 pause = () ->
@@ -117,7 +121,7 @@ pause = () ->
     clearInterval(tickId)
     tickId = null
   else
-    tickId = setInterval(tick, 300)
+    tickId = setInterval(tick, 1000/FRAMERATE)
 
 print = () ->
   out = document.getElementById('output')
