@@ -55,7 +55,7 @@ class Node
   remove: (id, pos) =>
     throw "PRECONDITION: pos intersects node for remove" if not @intersects(pos)
 
-    if id in @bigItems
+    if id of @bigItems
       #If the item is stored in our bigItems map, just remove it and we are done
       delete @bigItems[id]
       return
@@ -71,13 +71,15 @@ class Node
       #recurse to children
       for own child in @children
         child.remove(id, pos) if child.intersects(pos)
-
-    @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
+      @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
 
   makeLeaf: () =>
+    throw "CALLING makeLeaf on a leaf node" if @leaf
+    throw "CALLING makeLeaf on a node with too many items under it" if @numItems > (@quadtree.maxItems / 2)
     @leaf = true
     for own child in @children
-      child.makeLeaf() if not child.leaf
+
+      child.makeLeaf() if not child.leaf  #TODO: still not sure that I understand how this condition ever happens
       for own id, pos of child.bigItems
         @items[id] = pos #if not id in @items  #Not sure if I should bother with this if -- probably no slower to just overwrite
       for own id, pos of child.items
@@ -92,9 +94,11 @@ class Node
     if @covers(oldpos)
       if @covers(newpos)
         #used to cover node, still does -- nothing to do
+        throw "ILLEGAL STATE: UPDATE COVERS" if id not of @bigItems
         @bigItems[id] = newpos
       else
         #used to cover, doesn't anymore
+        throw "ILLEGAL STATE: UPDATE COVERS 2" if id not of @bigItems
         delete @bigItems[id]
         @insert(id, newpos)
     else #not @covers(oldpos)
