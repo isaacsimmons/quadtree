@@ -9,10 +9,11 @@ qt = new QuadTree([0, 0, TREE_PROPS.MAX_SIZE, TREE_PROPS.MAX_SIZE], TREE_PROPS.M
 
 canvas = document.getElementById('test')
 r = if canvas? then new Renderer(canvas, qt) else null
-scenario = new Scenario(qt)
+scenario = new Scenario(TREE_PROPS.MAX_SIZE)
 
 tick = () ->
-  scenario.tick()
+  scenario.driftCoords()
+  scenario.storeCoords(qt)
   r.draw() if r?
 
 tickId = null

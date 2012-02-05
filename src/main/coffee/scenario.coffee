@@ -1,6 +1,5 @@
 class Scenario
-  constructor: (@qt) ->
-    @maxSize = Math.min(@qt.bounds[2] - @qt.bounds[0], @qt.bounds[3] - @qt.bounds[1])
+  constructor: (@maxSize) ->
     @counts = {cluster: 5, large: 15, medium: 3, small: 10, point: 20}
     @speeds = {cluster: 1, small: 2, point: 3}
     @sizes = {small: 1, medium: 2, large: 4, cluster: 10}
@@ -68,18 +67,12 @@ class Scenario
         @medium[i] = @sum(@clusters[cluster], @randomPosDelta(@sizes['cluster'])) if @outOfRange(@medium[i], @clusters[cluster], @sizes['cluster'])
     true
 
-  storeCoords: () =>
+  storeCoords: (qt) =>
     for point, i in @points
-      @qt.put("point#{i}", point[0], point[1])
+      qt.put("point#{i}", point[0], point[1])
     for sbox, si in @small
-      @qt.put("small#{si}", sbox[0], sbox[1], sbox[0] + @sizes['small'], sbox[1] + @sizes['small'])
+      qt.put("small#{si}", sbox[0], sbox[1], sbox[0] + @sizes['small'], sbox[1] + @sizes['small'])
     for mbox, mi in @medium
-      @qt.put("medium#{mi}", mbox[0], mbox[1], mbox[0] + @sizes['medium'], mbox[1] + @sizes['medium'])
+      qt.put("medium#{mi}", mbox[0], mbox[1], mbox[0] + @sizes['medium'], mbox[1] + @sizes['medium'])
     for lbox, li in @large
-      @qt.put("large#{li}", lbox[0], lbox[1], lbox[0] + @sizes['large'], lbox[1] + @sizes['large'])
-
-
-  tick: () =>
-    @driftCoords()
-    @storeCoords()
-
+      qt.put("large#{li}", lbox[0], lbox[1], lbox[0] + @sizes['large'], lbox[1] + @sizes['large'])
