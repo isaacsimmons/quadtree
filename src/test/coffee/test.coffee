@@ -1,27 +1,30 @@
 #More on nodeunit at https://github.com/caolan/nodeunit#readme
 
-populate = (tree) ->
-  tree.put('alfa', 6, 4, 7, 5)
-  tree.put('bravo', 6, 4, 7, 5)
-  tree.put('charlie', 6, 4, 7, 5)
-  tree.put('delta', 6, 4, 7, 5)
-  tree.put('echo', 6, 4, 7, 5)
-  tree.put('foxtrot', 6, 4, 7, 5)
-  tree.put('golf', 6, 4, 7, 5)
-  tree.put('hotel', 2, 4, 3, 5)
-  tree.put('india', 6, 4, 7, 5)
-  tree.put('juliet', 6, 4, 7, 5)
-  tree.put('kilo', 6, 4, 7, 5)
-  tree.put('lima', 6, 4, 7, 5)
+MAX_SIZE = 50
+QUERY_SIZE = 10
+
+queryPoints = (t1, t2, test) ->
+  for i in [0...100]
+    px = Math.random() * (MAX_SIZE - QUERY_SIZE)
+    py = Math.random() * (MAX_SIZE - QUERY_SIZE)
+    q = [px, py, px + QUERY_SIZE, py + QUERY_SIZE]
+    test.equal(t1.find(q[0], q[1], q[2], q[3]), t2.find(q[0], q[1], q[2], q[3]), 'Wrong results returned from search')
 
 exports.testSearch = (test) ->
-  qt = new QuadTreeDebug([0, 0, 30, 30], 6)
+  s = new Scenario(MAX_SIZE)
+  qt = new QuadTreeDebug([0, 0, MAX_SIZE, MAX_SIZE], 6)
   ft = new FlatTree()
 
-  populate(qt)
-  populate(ft)
+  s.initCoords()
 
-  test.equal(qt.find(6.5, 4.5).length, ft.find(6.5, 4.5).length, 'Wrong number of results returned from search')
+  s.storeCoords(qt)
+  s.storeCoords(ft)
 
+  s.driftCoords()
+
+  s.storeCoords(qt)
+  s.storeCoords(ft)
+
+  queryPoints(qt, ft, test)
   test.done()
 
