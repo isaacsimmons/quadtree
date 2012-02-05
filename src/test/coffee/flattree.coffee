@@ -13,9 +13,9 @@ class FlatTree
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
     q = [minX, minY, maxX, maxY]
-    ret = []
+    ret = {}
     for own id, pos of @items
-      ret.push(id) if @intersects(q, pos)
+      ret[id] = true if @intersects(q, pos)
     ret
 
 

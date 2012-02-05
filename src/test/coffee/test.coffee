@@ -8,7 +8,7 @@ queryPoints = (t1, t2, test) ->
     px = Math.random() * (MAX_SIZE - QUERY_SIZE)
     py = Math.random() * (MAX_SIZE - QUERY_SIZE)
     q = [px, py, px + QUERY_SIZE, py + QUERY_SIZE]
-    test.equal(t1.find(q[0], q[1], q[2], q[3]), t2.find(q[0], q[1], q[2], q[3]), 'Wrong results returned from search')
+    test.deepEqual(t1.find(q[0], q[1], q[2], q[3]), t2.find(q[0], q[1], q[2], q[3]), 'Wrong results returned from search')
 
 exports.testSearch = (test) ->
   s = new Scenario(MAX_SIZE)

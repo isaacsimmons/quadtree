@@ -17,14 +17,11 @@ class Node
 
   find: (q, res) =>
     for own id, pos of @bigItems
-      res.push(id)
-
+      res[id] = true
     for own id, pos of @items
-      res.push(id) if intersects(pos, q)
-
+      res[id] = true if intersects(pos, q)
     for own child in @children
       child.find(q, res) if child.intersects(q)
-
     res
 
   intersects: (q) =>
@@ -155,7 +152,7 @@ class QuadTree
       @root.insert(id, newPosition)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
-    @root.find([minX, minY, maxX, maxY], [])
+    @root.find([minX, minY, maxX, maxY], {})
 
   remove: (id) =>
     @root.remove(id, @positions[id])
