@@ -53,6 +53,8 @@ class Scenario
       @add(@clusters[cluster], clusterDelta)
       if @sizes['medium'] > @clusters[cluster][0] or @clusters[cluster][0] > @maxSize - @sizes['cluster'] - @sizes['medium'] or @sizes['medium'] > @clusters[cluster][1] or @clusters[cluster][1] > @maxSize - @sizes['cluster'] - @sizes['medium']
         @clusters[cluster] = @randomCoord(@sizes['cluster'] + @sizes['medium'])
+        heading = Math.random() * Math.PI * 2
+        @clusterSpeeds[cluster] = [Math.sin(heading) * @speeds['cluster'], Math.cos(heading) * @speeds['cluster']]
       for point in [0...@counts['point']]
         i = cluster * @counts['point'] + point
         @add(@points[i], @randomDelta(@speeds['point']))

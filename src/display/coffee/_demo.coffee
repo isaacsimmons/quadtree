@@ -1,5 +1,5 @@
 TREE_PROPS =
-  MAX_SIZE: 40
+  MAX_SIZE: 100
   MAX_ITEMS: 7
   MAX_LEVELS: 6
 
@@ -10,6 +10,7 @@ qt = new QuadTree([0, 0, TREE_PROPS.MAX_SIZE, TREE_PROPS.MAX_SIZE], TREE_PROPS.M
 canvas = document.getElementById('test')
 r = if canvas? then new Renderer(canvas, qt) else null
 scenario = new Scenario(TREE_PROPS.MAX_SIZE)
+scenario.sizes['cluster'] = 20
 
 tick = () ->
   scenario.driftCoords()
@@ -34,5 +35,5 @@ document.getElementById('pause').onclick = pause
 document.getElementById('print').onclick = print
 
 scenario.initCoords()
-tick()
-tickId = setInterval(tick, 1000/FRAMERATE)
+scenario.storeCoords(qt)
+r.draw() if r?
