@@ -159,11 +159,6 @@ class QuadTree
     @root = new Node(@bounds, 0, @)
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
-    #Repair ordering if passed in incorrectly
-    [minX, maxX] = [maxX, minX] if minX > maxX
-    [minY, maxY] = [maxY, minY] if minY > maxY
-
-
     newPosition = [minX, minY, maxX, maxY]
 
     console.log("POS: #{JSON.stringify(newPosition)}, BOUNDS: #{JSON.stringify(@bounds)}") if not @root.intersects(newPosition)
@@ -179,10 +174,6 @@ class QuadTree
       @root.insert(id, newPosition)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
-    #Repair ordering if passed in incorrectly
-    [minX, maxX] = [maxX, minX] if minX > maxX
-    [minY, maxY] = [maxY, minY] if minY > maxY
-
     #TODO: should be safe to search outside of the tree area -- make sure that is true
 
     @root.find([minX, minY, maxX, maxY], [])
