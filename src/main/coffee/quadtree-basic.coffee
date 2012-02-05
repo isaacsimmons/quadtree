@@ -54,11 +54,9 @@ class Node
 
     @numItems -= 1
 
-    if @leaf
-      #If we are a leaf, it should be stored here
+    if @leaf #If we are a leaf, it should be stored here
       delete @items[id]
-    else
-      #recurse to children
+    else #recurse to children
       for own child in @children
         child.remove(id, pos) if child.intersects(pos)
       @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
@@ -73,9 +71,8 @@ class Node
     @children = []
 
   update: (id, oldpos, newpos) =>
-    #TODO: can just check presence in bigItems as shortcut for covers(oldpos)
     #TODO: these if/else branching trees can be cleaned up some once I know they work
-    if @covers(oldpos)
+    if id of @bigItems #shortcut for @covers(oldpos)
       if @covers(newpos)
         #used to cover node, still does -- nothing to do
         @bigItems[id] = newpos
@@ -88,14 +85,12 @@ class Node
 
         #didnt used to cover, does now
         @remove(id, oldpos)
-
         @bigItems[id] = newpos
       else
         #didnt cover before, doesn't now
         if @leaf
           @items[id] = newpos
         else
-          #TODO: check if I am a leaf //Same as previous -- @children will simply be empty
           for own child in @children
             if child.intersects(oldpos)
               if child.intersects(newpos)
@@ -116,8 +111,7 @@ class Node
 #    [intersect_self, covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3] //Nah, always intersects self?
 
   createChildren: () =>
-    [
-      new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree),
+    [ new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree),
       new Node([@bounds[0], @midPoint[1], @midPoint[0], @bounds[3]], @depth + 1, @quadtree),
       new Node([@midPoint[0], @bounds[1], @bounds[2], @midPoint[1]], @depth + 1, @quadtree),
       new Node([@midPoint[0], @midPoint[1], @bounds[2], @bounds[3]], @depth + 1, @quadtree)
@@ -133,7 +127,6 @@ class Node
     @numItems = 0
     @insert(item, pos) for own item, pos of @items
     @items = {}
-    true
 
 class QuadTree
   constructor: (@bounds, @maxDepth, @maxItems = 10) ->
