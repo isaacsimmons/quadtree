@@ -17,7 +17,7 @@ class Node
 
   find: (q, res) =>
     for own id, pos of @bigItems
-      res.push(id)# if intersects(pos, q) #TODO: make sure this really isn't necessary
+      res.push(id)
 
     for own id, pos of @items
       res.push(id) if intersects(pos, q)
@@ -35,10 +35,6 @@ class Node
     q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
 
   insert: (id, pos) =>
-    console.log("POS: #{JSON.stringify(pos)}, BOUNDS: #{JSON.stringify(@bounds)}") if not @intersects(pos)
-    throw "PRECONDITION: pos intersects node for insert" if not @intersects(pos)
-
-    #TODO: should numItems *not* count bigItems?
     if @covers(pos)
       @bigItems[id] = pos
       return
@@ -54,8 +50,6 @@ class Node
     true
 
   remove: (id, pos) =>
-    throw "PRECONDITION: pos intersects node for remove" if not @intersects(pos)
-
     if id of @bigItems
       #If the item is stored in our bigItems map, just remove it and we are done
       delete @bigItems[id]
@@ -65,9 +59,7 @@ class Node
 
     if @leaf
       #If we are a leaf, it should be stored here
-      throw "Item not found" if not id in @items
       delete @items[id]
-      #TODO: check if this needs to be rolled back up into its parent
     else
       #recurse to children
       for own child in @children
@@ -75,11 +67,8 @@ class Node
       @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
 
   makeLeaf: () =>
-    throw "CALLING makeLeaf on a leaf node" if @leaf
-    throw "CALLING makeLeaf on a node with too many items under it" if @numItems > (@quadtree.maxItems / 2)
     @leaf = true
     for own child in @children
-      throw "Children of makeLeaf call should be leaves" if not child.leaf #TODO: make sure this assert is correct
       for own id, pos of child.bigItems
         @items[id] = pos #if not id in @items  #Not sure if I should bother with this if -- probably no slower to just overwrite
       for own id, pos of child.items
@@ -87,18 +76,14 @@ class Node
     @children = []
 
   update: (id, oldpos, newpos) =>
-    throw "PRECONDITION: oldpos intersects node for update" if not @intersects(oldpos)
-    throw "PRECONDITION: newpos intersects node for update" if not @intersects(newpos)
     #TODO: can just check presence in bigItems as shortcut for covers(oldpos)
     #TODO: these if/else branching trees can be cleaned up some once I know they work
     if @covers(oldpos)
       if @covers(newpos)
         #used to cover node, still does -- nothing to do
-        throw "ILLEGAL STATE: UPDATE COVERS" if id not of @bigItems
         @bigItems[id] = newpos
       else
         #used to cover, doesn't anymore
-        throw "ILLEGAL STATE: UPDATE COVERS 2" if id not of @bigItems
         delete @bigItems[id]
         @insert(id, newpos)
     else #not @covers(oldpos)
@@ -133,17 +118,19 @@ class Node
     [covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3]
 #    [intersect_self, covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3] //Nah, always intersects self?
 
-  makeBranch: () =>
-    #turn node into a branch node
-    @leaf = false
-
-    #create and insert new child nodes
-    @children = [
+  createChildren: () =>
+    [
       new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree),
       new Node([@bounds[0], @midPoint[1], @midPoint[0], @bounds[3]], @depth + 1, @quadtree),
       new Node([@midPoint[0], @bounds[1], @bounds[2], @midPoint[1]], @depth + 1, @quadtree),
       new Node([@midPoint[0], @midPoint[1], @bounds[2], @bounds[3]], @depth + 1, @quadtree)
     ]
+
+  makeBranch: () =>
+    @leaf = false
+
+    #create and insert new child nodes
+    @children = @createChildren()
 
     #re-insert all items that were at this node
     @numItems = 0
@@ -153,17 +140,11 @@ class Node
 
 class QuadTree
   constructor: (@bounds, @maxDepth, @maxItems = 10) ->
-    if @bounds[0] >= @bounds[2] or @bounds[1] >= @bounds[3]
-      throw "Illegal bounding box for quadtree"
     @positions = {}
     @root = new Node(@bounds, 0, @)
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
     newPosition = [minX, minY, maxX, maxY]
-
-    console.log("POS: #{JSON.stringify(newPosition)}, BOUNDS: #{JSON.stringify(@bounds)}") if not @root.intersects(newPosition)
-    if minX < @bounds[0] or minY < @bounds[1] or maxX >= @bounds[2] or maxY >= @bounds[3]
-      throw "coordinate out of bounds for quadtree"
 
     oldPosition = @positions[id]
     @positions[id] = newPosition
@@ -174,11 +155,8 @@ class QuadTree
       @root.insert(id, newPosition)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
-    #TODO: should be safe to search outside of the tree area -- make sure that is true
-
     @root.find([minX, minY, maxX, maxY], [])
 
   remove: (id) =>
-    throw "Item not present in quadtree" if not id in @positions
     @root.remove(id, @positions[id])
     delete @positions[id]

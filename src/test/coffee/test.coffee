@@ -15,7 +15,7 @@ populate = (tree) ->
   tree.put('lima', 6, 4, 7, 5)
 
 exports.testSearch = (test) ->
-  qt = new QuadTree([0, 0, 30, 30], 6)
+  qt = new QuadTreeDebug([0, 0, 30, 30], 6)
   ft = new FlatTree()
 
   populate(qt)
