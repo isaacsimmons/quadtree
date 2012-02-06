@@ -3,15 +3,15 @@ class NodeDebug extends Node
     super(bounds, depth, quadtree)
 
   find: (q, res) =>
-    throw "Search doesn't intersect node" if not @intersects(q)
+    throw "Search doesn't intersect node" if not intersects(q, @bounds)
     super(q, res)
 
   insert: (id, pos) =>
-    throw "Position doesn't intersect node for insert" if not @intersects(pos)
+    throw "Position doesn't intersect node for insert" if not intersects(pos, @bounds)
     super(id, pos)
 
   remove: (id, pos) =>
-    throw "Position doesn't intersect node for remove" if not @intersects(pos)
+    throw "Position doesn't intersect node for remove" if not intersects(pos, @bounds)
     throw "Item not found" if @leaf and not id in @items
     super(id, pos)
 
@@ -24,8 +24,8 @@ class NodeDebug extends Node
     super()
 
   update: (id, oldpos, newpos) =>
-    throw "oldpos doesn't intersect node for update" if not @intersects(oldpos)
-    throw "newpos doesn't intersect node for update" if not @intersects(newpos)
+    throw "oldpos doesn't intersect node for update" if not intersects(oldpos, @bounds)
+    throw "newpos doesn't intersect node for update" if not intersects(newpos, @bounds)
     throw "Illegal state for old position" if @covers(oldpos) ^ id of @bigItems
     super(id, oldpos, newpos)
 

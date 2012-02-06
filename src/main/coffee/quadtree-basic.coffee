@@ -20,16 +20,10 @@ class Node
       res[id] = true
     for own id, pos of @items
       res[id] = true if intersects(pos, q)
-    for own child in @children
-      child.find(q, res) if child.intersects(q)
+    vals = @intersectTest(q)
+    for own child, i in @children
+      child.find(q, res) if vals[i]
     res
-
-  intersects: (q) =>
-    intersects(q, @bounds)
-
-  covers: (q) =>
-    #TODO: consider other options for this
-    q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
 
   insert: (id, pos) =>
     if @covers(pos)
@@ -42,8 +36,9 @@ class Node
       @items[id] = pos #TODO: I don't really need to store these here with the pointer back to the tree
       @makeBranch() if @numItems > @quadtree.maxItems and @depth < @quadtree.maxDepth
     else
-      for own child in @children
-        child.insert(id, pos) if child.intersects(pos)
+      vals = @intersectTest(pos)
+      for own child, i in @children
+        child.insert(id, pos) if vals[i]
     true
 
   remove: (id, pos) =>
@@ -57,8 +52,9 @@ class Node
     if @leaf #If we are a leaf, it should be stored here
       delete @items[id]
     else #recurse to children
-      for own child in @children
-        child.remove(id, pos) if child.intersects(pos)
+      vals = @intersectTest(pos)
+      for own child, i in @children
+        child.remove(id, pos) if vals[i]
       @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
 
   makeLeaf: () =>
@@ -91,24 +87,38 @@ class Node
         if @leaf
           @items[id] = newpos
         else
-          for own child in @children
-            if child.intersects(oldpos)
-              if child.intersects(newpos)
+          oldVals = @intersectTest(oldpos)
+          newVals = @intersectTest(newpos)
+
+          for own child, i in @children
+            if oldVals[i]
+              if newVals[i]
                 #intersected before, still does
                 child.update(id, oldpos, newpos)
               else
                 #intersected before, doesn't anymore
                 child.remove(id, oldpos)
-            else if child.intersects(newpos)
+            else if newVals[i]
               #didn't used to intersect, does now -- insert
               child.insert(id, newpos)
 
+  covers: (q) =>
+    #TODO: consider other options for this
+    q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
 
-  intersecttest: (q) =>
+  intersectTest: (q) =>
     #TODO: write this, use in find/insert/update to reduce number of checks run
     #TODO: can I simplify somewhat if I know that intersects_self is true?
-    [covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3]
-#    [intersect_self, covers_self, intersects_child_0, intersects_child_1, intersects_child_2, intersects_child_3] //Nah, always intersects self?
+    #Assumes that intersects self is true
+    lowX = q[0] < @midPoint[0]
+    highX = q[2] >= @midPoint[0]
+    lowY = q[1] < @midPoint[1]
+    highY = q[3] >= @midPoint[1]
+    [ lowX and lowY,
+      lowX and highY,
+      highX and lowY,
+      highX and highY
+    ]
 
   createChildren: () =>
     [ new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree),
