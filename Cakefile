@@ -1,4 +1,4 @@
-{spawn} = require 'child_process'
+{exec} = require 'child_process'
 {reporters} = require 'nodeunit'
 fs = require 'fs'
 isWindows = require('os').platform().substring(0,3) is 'win'
@@ -18,29 +18,31 @@ copy = (src, dest) ->
   destfile.once 'open', (fd) ->
     require('util').pump(srcfile, destfile)
 
+compile = (output, bare, input...) ->
+  exec "#{COFFEE_CMD} -c#{if bare then 'b' else ''} -o #{build} -j #{output} #{input.join(' ')}", (err, stdout, stderr) ->
+    throw err if err
+    console.log (stdout + stderr) if stdout or stderr
+#  coffee.on 'exit', () -> try fs.rmdirSync('-p')
+
 task 'build', 'build the project', (options) ->
   try fs.mkdirSync(build)
 
-  #TODO: if coffee outputs errors, they get swallowed
-
-  coffee = spawn(COFFEE_CMD, ['-cb', '-o', build, '-j', 'quadtree', 'src/main/coffee'])
-  coffee.stdout.on 'data', (data) -> console.log data.toString().trim()
-  coffee.on 'exit', () -> try fs.rmdirSync('-p')
-
-  coffee = spawn(COFFEE_CMD, ['-cb', '-o', build, '-j', 'display', 'src/display/coffee'])
-  coffee.stdout.on 'data', (data) -> console.log data.toString().trim()
-  coffee.on 'exit', () -> try fs.rmdirSync('-p')
+  compile('qt', false, 'src/main/coffee/quadtree-basic.coffee')
+  compile('quadtree', true, 'src/main/coffee')
+  compile('display', true, 'src/display/coffee')
+  compile('test', true, 'src/main/coffee', 'src/test/coffee')
 
   copy("src/display/css/#{file}", "#{build}/#{file}") for file in fs.readdirSync('src/display/css')
   copy("src/display/html/#{file}", "#{build}/#{file}") for file in fs.readdirSync('src/display/html')
 
-  coffee = spawn(COFFEE_CMD, ['-cb', '-o', build, '-j', 'test', 'src/main/coffee', 'src/test/coffee'])
-  coffee.stdout.on 'data', (data) -> console.log data.toString().trim()
-  coffee.on 'exit', () -> try fs.rmdirSync('-p')
-
 task 'minify', 'Minify javascript output', (options) ->
-#  fs.unlinkSync("#{build}/#{file}") for file in fs.readdirSync(build)
-  uglify = spawn(UGLFIY_CMD, ['-o', 'build/quadtree-min.js', 'build/quadtree.js'])
+#  '--unsafe' ?
+  uglify = spawn(UGLFIY_CMD, ['--lift-vars', '-mt', '-o', 'build/qt-min.js', 'build/qt.js'])
+  uglify.stdout.on 'data', (data) -> console.log data.toString().trim()
+
+task 'cc', 'Minify javascript output', (options) ->
+#  '--unsafe' ?
+#  uglify = spawn('java', ['-jar' '--lift-vars', '-mt', '-o', 'build/qt-min.js', 'build/qt.js'])
   uglify.stdout.on 'data', (data) -> console.log data.toString().trim()
 
 task 'test', 'run nodeunit tests', (options) ->
