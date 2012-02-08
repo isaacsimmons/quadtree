@@ -2,7 +2,6 @@
 {reporters} = require 'nodeunit'
 fs = require 'fs'
 isWindows = require('os').platform().substring(0,3) is 'win'
-#compiler = require 'require/compiler'
 
 COFFEE_CMD = if isWindows then 'coffee.cmd' else 'coffee'
 UGLFIY_CMD = if isWindows then 'uglifyjs.cmd' else 'uglifyjs'
@@ -22,8 +21,8 @@ copy = (src, dest) ->
 task 'temp', 'testing stuff', (options) ->
   console.log(compiler.compile('./build/main/coffee/quadtree-basic', {beautify: true, ascii_only: true}))
 
-compile = (output, bare, input...) ->
-  exec "#{COFFEE_CMD} -c#{if bare then 'b' else ''} -o #{build} -j #{output} #{input.join(' ')}", (err, stdout, stderr) ->
+compile = (output, input...) ->
+  exec "#{COFFEE_CMD} -cb -o #{build} -j #{output} #{input.join(' ')}", (err, stdout, stderr) ->
     throw err if err
     console.log (stdout + stderr) if stdout or stderr
 #  coffee.on 'exit', () -> try fs.rmdirSync('-p')
@@ -31,13 +30,13 @@ compile = (output, bare, input...) ->
 task 'build', 'build the project', (options) ->
   try fs.mkdirSync(build)
 
-  compile('qt', false, 'src/main/coffee/quadtree-basic.coffee')
-  compile('quadtree', true, 'src/main/coffee')
-  compile('display', true, 'src/main/coffee', 'src/display/coffee')
-  compile('test', true, 'src/main/coffee', 'src/test/coffee')
+  compile('qt', 'src/main/quadtree-basic.coffee')
+  compile('display', 'src/main', 'src/display')
+  compile('test', 'src/main', 'src/test')
 
-  copy("src/display/css/#{file}", "#{build}/#{file}") for file in fs.readdirSync('src/display/css')
-  copy("src/display/html/#{file}", "#{build}/#{file}") for file in fs.readdirSync('src/display/html')
+  for file in fs.readdirSync('src/display/')
+    if file.slice(-4) is 'html' or file.slice(-3) is 'css' or file.slice(-2) is 'js'
+      copy("src/display/#{file}", "#{build}/#{file}")
 
 minify = (source) ->
   exec "#{UGLFIY_CMD} --lift-vars -mt -o #{source}-uglify.js #{source}.js", (err, stdout, stderr) ->
