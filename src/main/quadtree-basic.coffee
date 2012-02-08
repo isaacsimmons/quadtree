@@ -25,7 +25,7 @@ class Node
     for own id, pos of @items
       res[id] = true if intersects(pos, q)
     vals = @intersectTest(q)
-    for own child, i in @children
+    for child, i in @children
       child.find(q, res) if vals[i]
     res
 
@@ -41,7 +41,7 @@ class Node
       @makeBranch() if @numItems > @quadtree.maxItems and @depth < @quadtree.maxDepth
     else
       vals = @intersectTest(pos)
-      for own child, i in @children
+      for child, i in @children
         child.insert(id, pos) if vals[i]
     true
 
@@ -57,13 +57,13 @@ class Node
       delete @items[id]
     else #recurse to children
       vals = @intersectTest(pos)
-      for own child, i in @children
+      for child, i in @children
         child.remove(id, pos) if vals[i]
       @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
 
   makeLeaf: () =>
     @leaf = true
-    for own child in @children
+    for child in @children
       for own id, pos of child.bigItems
         @items[id] = pos #if not id in @items  #Not sure if I should bother with this if -- probably no slower to just overwrite
       for own id, pos of child.items
@@ -94,7 +94,7 @@ class Node
           oldVals = @intersectTest(oldpos)
           newVals = @intersectTest(newpos)
 
-          for own child, i in @children
+          for child, i in @children
             if oldVals[i]
               if newVals[i]
                 #intersected before, still does
@@ -107,12 +107,9 @@ class Node
               child.insert(id, newpos)
 
   covers: (q) =>
-    #TODO: consider other options for this
     q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
 
   intersectTest: (q) =>
-    #TODO: write this, use in find/insert/update to reduce number of checks run
-    #TODO: can I simplify somewhat if I know that intersects_self is true?
     #Assumes that intersects self is true
     lowX = q[0] < @midPoint[0]
     highX = q[2] >= @midPoint[0]
@@ -144,6 +141,8 @@ class Node
 
 class QuadTree
   constructor: (@bounds, @maxDepth, @maxItems = 10) ->
+    if @bounds.length != 4 or @bounds[0] >= @bounds[2] or @bounds[1] >= @bounds[3]
+      throw "Illegal bounding box for quadtree"
     @positions = {}
     @root = new Node(@bounds, 0, @)
 

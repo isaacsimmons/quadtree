@@ -47,7 +47,6 @@ class NodeDebug extends Node
 
 class QuadTreeDebug extends QuadTree
   constructor: (@bounds, @maxDepth, @maxItems = 10) ->
-    console.log('debug constructor')
     if @bounds[0] >= @bounds[2] or @bounds[1] >= @bounds[3]
       throw "Illegal bounding box for quadtree"
     @positions = {}
