@@ -19,6 +19,8 @@ class Node
 
 
   find: (q, res) =>
+    if DEBUG
+      throw "Search doesn't intersect node" if not intersects(q, @bounds)
     for own id of @bigItems
       res[id] = true
     for own id of @items
