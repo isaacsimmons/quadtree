@@ -4,7 +4,6 @@ intersects = (p1, p2) ->
   #TODO: move this into Node?
   p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
 
-#TODO: don't store positions in @items/@bigItems maps, just reference the pointers back in the quadtree
 #TODO: normalize box to bottom level cells and don't bother recursing the tree on update if unchanged
 
 class Node
@@ -20,10 +19,10 @@ class Node
 
 
   find: (q, res) =>
-    for own id, pos of @bigItems
+    for own id of @bigItems
       res[id] = true
-    for own id, pos of @items
-      res[id] = true if intersects(pos, q)
+    for own id of @items
+      res[id] = true if intersects(@quadtree.positions[id], q)
     vals = @intersectTest(q)
     for child, i in @children
       child.find(q, res) if vals[i]
@@ -31,13 +30,13 @@ class Node
 
   insert: (id, pos) =>
     if @covers(pos)
-      @bigItems[id] = pos
+      @bigItems[id] = true
       return
 
     @numItems += 1
 
     if @leaf
-      @items[id] = pos #TODO: I don't really need to store these here with the pointer back to the tree
+      @items[id] = true
       @makeBranch() if @numItems > @quadtree.maxItems and @depth < @quadtree.maxDepth
     else
       vals = @intersectTest(pos)
@@ -65,18 +64,15 @@ class Node
     @leaf = true
     for child in @children
       for own id, pos of child.bigItems
-        @items[id] = pos #if not id in @items  #Not sure if I should bother with this if -- probably no slower to just overwrite
+        @items[id] = true
       for own id, pos of child.items
-        @items[id] = pos
+        @items[id] = true
     @children = []
 
   update: (id, oldpos, newpos) =>
     #TODO: these if/else branching trees can be cleaned up some once I know they work
     if id of @bigItems #shortcut for @covers(oldpos)
-      if @covers(newpos)
-        #used to cover node, still does -- nothing to do
-        @bigItems[id] = newpos
-      else
+      if not @covers(newpos)
         #used to cover, doesn't anymore
         delete @bigItems[id]
         @insert(id, newpos)
@@ -85,12 +81,10 @@ class Node
 
         #didnt used to cover, does now
         @remove(id, oldpos)
-        @bigItems[id] = newpos
+        @bigItems[id] = true
       else
         #didnt cover before, doesn't now
-        if @leaf
-          @items[id] = newpos
-        else
+        if not @leaf
           oldVals = @intersectTest(oldpos)
           newVals = @intersectTest(newpos)
 
@@ -136,7 +130,7 @@ class Node
 
     #re-insert all items that were at this node
     @numItems = 0
-    @insert(item, pos) for own item, pos of @items
+    @insert(item, @quadtree.positions[item]) for own item of @items
     @items = {}
 
 class QuadTree
