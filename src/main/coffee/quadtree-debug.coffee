@@ -1,3 +1,5 @@
+#TODO: fold these back into quadtree-basic, guard by "if DEBUG", use minification to DCA those out
+
 class NodeDebug extends Node
   constructor: (bounds, depth, quadtree) ->
     super(bounds, depth, quadtree)
