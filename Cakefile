@@ -5,7 +5,7 @@ isWindows = require('os').platform().substring(0,3) is 'win'
 util = require('util')
 
 COFFEE_CMD = if isWindows then 'coffee.cmd' else 'coffee'
-UGLFIY_CMD = if isWindows then 'uglifyjs.cmd' else 'uglifyjs'
+UGLIFY_CMD = if isWindows then 'uglifyjs.cmd' else 'uglifyjs'
 
 BUILD = 'build'
 
@@ -29,10 +29,10 @@ compile = (output, inputs...) ->
   exec "#{COFFEE_CMD} -cb -o #{BUILD} -j #{output} #{inputs.join(' ')}", (err, stdout, stderr) ->
     throw err if err
     console.log (stdout + stderr) if stdout or stderr
-    exec "#{UGLFIY_CMD} --lift-vars --unsafe -d DEBUG=false -b -o #{BUILD}/#{output}-min.js #{BUILD}/#{output}.js", (err, stdout, stderr) ->
+    exec "#{UGLIFY_CMD} --lift-vars --unsafe -d DEBUG=false -b -o #{BUILD}/#{output}-min.js #{BUILD}/#{output}.js", (err, stdout, stderr) ->
       throw err if err
       console.log (stdout + stderr) if stdout or stderr
-      exec "#{UGLFIY_CMD} -d DEBUG=true -ns -b -o #{BUILD}/#{output}-debug.js #{BUILD}/#{output}.js", (err, stdout, stderr) ->
+      exec "#{UGLIFY_CMD} -d DEBUG=true -ns -b -o #{BUILD}/#{output}-debug.js #{BUILD}/#{output}.js", (err, stdout, stderr) ->
         throw err if err
         console.log (stdout + stderr) if stdout or stderr
         del("#{BUILD}/#{output}.js")
