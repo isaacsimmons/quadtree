@@ -50,9 +50,5 @@ task 'build', 'build the project', (options) ->
   for file in fs.readdirSync('src/display/')
     copy("src/display/#{file}", "#{BUILD}/#{file}") if file.slice(-6) isnt 'coffee'
 
-task 'minify', 'Minify javascript output', (options) ->
-  minify("#{BUILD}/qt")
-  minify("#{BUILD}/display")
-
 task 'test', 'run nodeunit tests', (options) ->
   reporters.default.run(["#{BUILD}/test-debug.js"])
