@@ -34,10 +34,6 @@ exports.testSearch = (test) ->
     s.storeCoords(ft)
     validate(test, qt)
 
-
-#  s.storeCoords(qt)
-#  s.storeCoords(ft)
-
   queryPoints(qt, ft, test)
   test.done()
 
