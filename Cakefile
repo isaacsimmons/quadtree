@@ -65,7 +65,7 @@ task 'build', 'build the project', (options) ->
   compile('test', 'src/main', 'src/test')
 
   for file in fs.readdirSync('src/display/')
-    copy("src/display/#{file}", "#{build}/#{file}") if file.slice(-6) is not 'coffee'
+    copy("src/display/#{file}", "#{build}/#{file}") if file.slice(-6) isnt 'coffee'
 
 minify = (source) ->
   exec "#{UGLFIY_CMD} --lift-vars -mt -o #{source}-uglify.js #{source}.js", (err, stdout, stderr) ->
