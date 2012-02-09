@@ -31,6 +31,8 @@ class Node
     res
 
   insert: (id, pos) =>
+    if DEBUG
+      throw "Position doesn't intersect node for insert" if not intersects(pos, @bounds)
     if @covers(pos)
       @bigItems[id] = true
       return
@@ -47,6 +49,9 @@ class Node
     true
 
   remove: (id, pos) =>
+    if DEBUG
+      throw "Position doesn't intersect node for remove" if not intersects(pos, @bounds)
+      throw "Item not found" if @leaf and not id in @items
     if id of @bigItems
       #If the item is stored in our bigItems map, just remove it and we are done
       delete @bigItems[id]
@@ -63,6 +68,12 @@ class Node
       @makeLeaf() if @numItems <= (@quadtree.maxItems / 2)
 
   makeLeaf: () =>
+    if DEBUG
+      throw "Calling makeLeaf on a leaf node" if @leaf
+      throw "Calling makeLeaf on a node with too many items under it" if @numItems > (@quadtree.maxItems / 2)
+      throw "Calling makeLeaf on a node without children" if @children.length != 4
+      for own child in @children
+        throw "Children of makeLeaf call should be leaves" if not child.leaf
     @leaf = true
     for child in @children
       for own id, pos of child.bigItems
@@ -72,6 +83,10 @@ class Node
     @children = []
 
   update: (id, oldpos, newpos) =>
+    if DEBUG
+      throw "oldpos doesn't intersect node for update" if not intersects(oldpos, @bounds)
+      throw "newpos doesn't intersect node for update" if not intersects(newpos, @bounds)
+      throw "Illegal state for old position" if @covers(oldpos) ^ id of @bigItems
     #TODO: these if/else branching trees can be cleaned up some once I know they work
     if id of @bigItems #shortcut for @covers(oldpos)
       if not @covers(newpos)
@@ -117,18 +132,21 @@ class Node
       highX and highY
     ]
 
-  createChildren: () =>
-    [ new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree),
+  makeBranch: () =>
+    if DEBUG
+      throw "Calling make branch on a branch node" if not @leaf
+      throw "Calling make branch on a node with too few items" if @numItems <= @quadtree.maxItems
+      throw "Calling makeBranch on a node that already has children" if @children.length > 0
+
+    @leaf = false
+
+    #create and insert new child nodes
+    @children = [
+      new Node([@bounds[0], @bounds[1], @midPoint[0], @midPoint[1]], @depth + 1, @quadtree),
       new Node([@bounds[0], @midPoint[1], @midPoint[0], @bounds[3]], @depth + 1, @quadtree),
       new Node([@midPoint[0], @bounds[1], @bounds[2], @midPoint[1]], @depth + 1, @quadtree),
       new Node([@midPoint[0], @midPoint[1], @bounds[2], @bounds[3]], @depth + 1, @quadtree)
     ]
-
-  makeBranch: () =>
-    @leaf = false
-
-    #create and insert new child nodes
-    @children = @createChildren()
 
     #re-insert all items that were at this node
     @numItems = 0
@@ -137,12 +155,14 @@ class Node
 
 class QuadTree
   constructor: (@bounds, @maxDepth, @maxItems = 10) ->
-    if @bounds.length != 4 or @bounds[0] >= @bounds[2] or @bounds[1] >= @bounds[3]
-      throw "Illegal bounding box for quadtree"
+    throw "Illegal bounding box for quadtree" if @bounds[0] >= @bounds[2] or @bounds[1] >= @bounds[3]
     @positions = {}
     @root = new Node(@bounds, 0, @)
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
+    throw "Illegal bounding box for put" if minX > maxX or minY > maxY
+    throw "Coordinate out of bounds for put" if minX < @bounds[0] or minY < @bounds[1] or maxX >= @bounds[2] or maxY >= @bounds[3]
+
     newPosition = [minX, minY, maxX, maxY]
 
     oldPosition = @positions[id]
@@ -154,8 +174,11 @@ class QuadTree
       @root.insert(id, newPosition)
 
   find: (minX, minY, maxX = minX, maxY = minY) =>
+    throw "Illegal bounding box for search" if minX > maxX or minY > maxY
+    #TODO: should be safe to search outside of the tree area -- make sure that is true
     @root.find([minX, minY, maxX, maxY], {})
 
   remove: (id) =>
+    throw "Item not present in quadtree" if not id in @positions
     @root.remove(id, @positions[id])
     delete @positions[id]
