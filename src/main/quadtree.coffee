@@ -2,7 +2,7 @@ intersects = (p1, p2) ->
   #TODO: double check edge conditions -- make sure I don't have p1 and p2 reversed
   #TODO: maybe I should just use >= on both ends of the bounding box
   #TODO: move this into Node?
-  p2[2] >= p1[0] and p2[0] < p1[2] and p2[3] >= p1[1] and p2[1] < p1[3]
+  p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
 
 #TODO: normalize box to bottom level cells and don't bother recursing the tree on update if unchanged
 
@@ -122,9 +122,9 @@ class Node
 
   intersectTest: (q) =>
     #Assumes that intersects self is true
-    lowX = q[0] < @midPoint[0]
+    lowX = q[0] <= @midPoint[0]
     highX = q[2] >= @midPoint[0]
-    lowY = q[1] < @midPoint[1]
+    lowY = q[1] <= @midPoint[1]
     highY = q[3] >= @midPoint[1]
     [ lowX and lowY,
       lowX and highY,
