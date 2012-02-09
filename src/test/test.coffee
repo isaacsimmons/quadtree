@@ -12,7 +12,7 @@ queryPoints = (t1, t2, test) ->
 
 exports.testSearch = (test) ->
   s = new Scenario(MAX_SIZE)
-  qt = new QuadTreeDebug([0, 0, MAX_SIZE, MAX_SIZE], 6)
+  qt = new QuadTree([0, 0, MAX_SIZE, MAX_SIZE], 6)
   ft = new FlatTree()
 
   s.initCoords()
