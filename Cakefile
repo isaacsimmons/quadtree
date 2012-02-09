@@ -32,7 +32,7 @@ compile = (output, inputs...) ->
   exec "#{COFFEE_CMD} -cb -o #{build} -j #{output} #{inputs.join(' ')}", (err, stdout, stderr) ->
     throw err if err
     console.log (stdout + stderr) if stdout or stderr
-    exec "#{UGLFIY_CMD} --lift-vars --unsafe -d DEBUG=false -mt -b -o #{build}/#{output}-min.js #{build}/#{output}.js", (err, stdout, stderr) ->
+    exec "#{UGLFIY_CMD} --lift-vars --unsafe -d DEBUG=false -b -o #{build}/#{output}-min.js #{build}/#{output}.js", (err, stdout, stderr) ->
       throw err if err
       console.log (stdout + stderr) if stdout or stderr
       exec "#{UGLFIY_CMD} -d DEBUG=true -ns -b -o #{build}/#{output}-debug.js #{build}/#{output}.js", (err, stdout, stderr) ->
