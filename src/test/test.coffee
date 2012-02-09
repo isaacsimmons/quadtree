@@ -3,6 +3,17 @@
 MAX_SIZE = 50
 QUERY_SIZE = 10
 
+validate = (test, qt) ->
+  validateNode(test, qt, qt.root)
+
+validateNode = (test, qt, node) ->
+  test.ok(node.children.length is (if node.leaf then 0 else 4))
+
+  test.ok(node.covers(qt.positions[item])) for own item of node.bigItems
+  test.ok(intersects(qt.positions[item], node.bounds)) for own item of node.items
+
+  validateNode(test, qt, child) for child in node.children
+
 queryPoints = (t1, t2, test) ->
   for i in [0...100]
     px = Math.random() * (MAX_SIZE - QUERY_SIZE)
@@ -21,6 +32,7 @@ exports.testSearch = (test) ->
     s.driftCoords()
     s.storeCoords(qt)
     s.storeCoords(ft)
+    validate(test, qt)
 
 
 #  s.storeCoords(qt)
