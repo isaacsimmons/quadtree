@@ -40,23 +40,6 @@ compile = (output, inputs...) ->
         console.log (stdout + stderr) if stdout or stderr
         del("#{build}/#{output}.js")
 
-#  compileCoffee = () ->
-#    exec "#{COFFEE_CMD} -cb -o #{build} -j #{output} #{inputs.join(' ')}", (err, stdout, stderr) ->
-#      throw err if err
-#      console.log (stdout + stderr) if stdout or stderr
-#  uglifyMin = () ->
-#    exec "#{UGLFIY_CMD} --lift-vars --unsafe -d DEBUG=false -mt -b -o #{build}/#{output}-min.js #{build}/#{output}.js", (err, stdout, stderr) ->
-#      throw err if err
-#      console.log (stdout + stderr) if stdout or stderr
-#  uglifyDebug = () ->
-#    exec "#{UGLFIY_CMD} -d DEBUG=true -ns -b -o #{build}/#{output}-debug.js #{build}/#{output}.js", (err, stdout, stderr) ->
-#      throw err if err
-#      console.log (stdout + stderr) if stdout or stderr
-#  p1 = compileCoffee()
-#  p1.on('exit', () -> b = uglifyMin())
-#
-#  e.on('exit', uglify)
-
 task 'build', 'build the project', (options) ->
   try fs.mkdirSync(build)
 
@@ -83,4 +66,4 @@ task 'minify', 'Minify javascript output', (options) ->
   minify("#{build}/display")
 
 task 'test', 'run nodeunit tests', (options) ->
-  reporters.default.run(["#{build}/test-min.js"])
+  reporters.default.run(["#{build}/test-debug.js"])
