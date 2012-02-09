@@ -9,9 +9,18 @@ UGLFIY_CMD = if isWindows then 'uglifyjs.cmd' else 'uglifyjs'
 
 build = 'build'
 
+del = (name) ->
+  try stats = fs.statSync(name)
+  if not stats?
+    return
+  if stats.isFile()
+    fs.unlinkSync(name)
+  else
+    del("#{name}/#{file}") for file in fs.readdirSync(name)
+    fs.rmdirSync(name)
+
 task 'clean', 'clean temporary build artifacts', (options) ->
-  try fs.unlinkSync("#{build}/#{file}") for file in fs.readdirSync(build)
-  try fs.rmdirSync(build)
+  del(build)
 
 copy = (src, dest) ->
   srcfile = fs.createReadStream(src)
@@ -20,25 +29,38 @@ copy = (src, dest) ->
     util.pump(srcfile, destfile)
 
 compile = (output, inputs...) ->
-  console.log('start ' + output)
-  e = exec "#{COFFEE_CMD} -cb -o #{build} -j #{output} #{inputs.join(' ')}", (err, stdout, stderr) ->
-    console.log('running ' + output)
+  exec "#{COFFEE_CMD} -cb -o #{build} -j #{output} #{inputs.join(' ')}", (err, stdout, stderr) ->
     throw err if err
     console.log (stdout + stderr) if stdout or stderr
-  uglify = () ->
     exec "#{UGLFIY_CMD} --lift-vars --unsafe -d DEBUG=false -mt -b -o #{build}/#{output}-min.js #{build}/#{output}.js", (err, stdout, stderr) ->
       throw err if err
       console.log (stdout + stderr) if stdout or stderr
-    exec "#{UGLFIY_CMD} -d DEBUG=true -ns -b -o #{build}/#{output}-debug.js #{build}/#{output}.js", (err, stdout, stderr) ->
-      throw err if err
-      console.log (stdout + stderr) if stdout or stderr
-  e.on('exit', uglify)
-  console.log('done ' + output)
+      exec "#{UGLFIY_CMD} -d DEBUG=true -ns -b -o #{build}/#{output}-debug.js #{build}/#{output}.js", (err, stdout, stderr) ->
+        throw err if err
+        console.log (stdout + stderr) if stdout or stderr
+        del("#{build}/#{output}.js")
+
+#  compileCoffee = () ->
+#    exec "#{COFFEE_CMD} -cb -o #{build} -j #{output} #{inputs.join(' ')}", (err, stdout, stderr) ->
+#      throw err if err
+#      console.log (stdout + stderr) if stdout or stderr
+#  uglifyMin = () ->
+#    exec "#{UGLFIY_CMD} --lift-vars --unsafe -d DEBUG=false -mt -b -o #{build}/#{output}-min.js #{build}/#{output}.js", (err, stdout, stderr) ->
+#      throw err if err
+#      console.log (stdout + stderr) if stdout or stderr
+#  uglifyDebug = () ->
+#    exec "#{UGLFIY_CMD} -d DEBUG=true -ns -b -o #{build}/#{output}-debug.js #{build}/#{output}.js", (err, stdout, stderr) ->
+#      throw err if err
+#      console.log (stdout + stderr) if stdout or stderr
+#  p1 = compileCoffee()
+#  p1.on('exit', () -> b = uglifyMin())
+#
+#  e.on('exit', uglify)
 
 task 'build', 'build the project', (options) ->
   try fs.mkdirSync(build)
 
-  compile('qt', 'src/main/quadtree-basic.coffee')
+  compile('qt', 'src/main/quadtree.coffee')
   compile('display', 'src/main', 'src/display')
   compile('test', 'src/main', 'src/test')
 
