@@ -17,13 +17,14 @@ exports.testSearch = (test) ->
 
   s.initCoords()
 
-  s.storeCoords(qt)
-  s.storeCoords(ft)
+  for i in [0...500]
+    s.driftCoords()
+    s.storeCoords(qt)
+    s.storeCoords(ft)
 
-  s.driftCoords()
 
-  s.storeCoords(qt)
-  s.storeCoords(ft)
+#  s.storeCoords(qt)
+#  s.storeCoords(ft)
 
   queryPoints(qt, ft, test)
   test.done()
