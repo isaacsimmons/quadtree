@@ -161,7 +161,7 @@ class QuadTree
 
   put: (id, minX, minY, maxX = minX, maxY = minY) =>
     throw "Illegal bounding box for put" if minX > maxX or minY > maxY
-    throw "Coordinate out of bounds for put" if minX < @bounds[0] or minY < @bounds[1] or maxX >= @bounds[2] or maxY >= @bounds[3]
+    throw "Coordinate out of bounds for put" if minX < @bounds[0] or minY < @bounds[1] or maxX > @bounds[2] or maxY > @bounds[3]
 
     newPosition = [minX, minY, maxX, maxY]
 
