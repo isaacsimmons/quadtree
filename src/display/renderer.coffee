@@ -22,7 +22,7 @@ class Renderer
 
   drawNode: (node) =>
     @drawBox([node.bounds[0], node.bounds[1], node.bounds[2], node.bounds[3]])
-    @drawNode(child) for own child in node.children
+    @drawNode(child) for child in node.children
 
   draw: (query) =>
     @clear()
