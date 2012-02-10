@@ -21,7 +21,7 @@ queryPoints = (t1, t2, test) ->
     q = [px, py, px + QUERY_SIZE, py + QUERY_SIZE]
     test.deepEqual(t1.find(q[0], q[1], q[2], q[3]), t2.find(q[0], q[1], q[2], q[3]), 'Wrong results returned from search')
 
-exports.testSearch = (test) ->
+exports.testSimulation = (test) ->
   s = new Scenario(MAX_SIZE)
   qt = new QuadTree([0, 0, MAX_SIZE, MAX_SIZE], 6)
   ft = new FlatTree()
@@ -37,3 +37,23 @@ exports.testSearch = (test) ->
   queryPoints(qt, ft, test)
   test.done()
 
+
+exports.testEdgeCases = (test) ->
+  qt = new QuadTree([-2, -2, 2, 2], 1, 1)
+  qt.put('a', -1, -1, 0, 0)
+  qt.put('b', 0, 0, 1, 1)
+  qt.put('c', 0, 0)
+
+  test.ok('a' of qt.find(-1, -1))
+  test.ok('b' not of qt.find(-1, -1))
+  test.ok('c' not of qt.find(-1, -1))
+  test.ok('a' of qt.find(0, 0))
+  test.ok('b' of qt.find(0, 0))
+  test.ok('c' of qt.find(0, 0))
+  test.ok('a' of qt.find(0, 0, 1, 1))
+  test.ok('b' of qt.find(0, 0, 1, 1))
+  test.ok('c' of qt.find(0, 0, 1, 1))
+  test.ok('a' not of qt.find(1, 1))
+  test.ok('b' of qt.find(1, 1))
+  test.ok('c' not of qt.find(1, 1))
+  test.done()
