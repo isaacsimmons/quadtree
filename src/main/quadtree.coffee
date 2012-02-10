@@ -72,7 +72,7 @@ class Node
       throw "Calling makeLeaf on a leaf node" if @leaf
       throw "Calling makeLeaf on a node with too many items under it" if @numItems > (@quadtree.maxItems / 2)
       throw "Calling makeLeaf on a node without children" if @children.length != 4
-      for own child in @children
+      for child in @children
         throw "Children of makeLeaf call should be leaves" if not child.leaf
     @leaf = true
     for child in @children
