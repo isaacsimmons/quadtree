@@ -14,12 +14,18 @@ validateNode = (test, qt, node) ->
 
   validateNode(test, qt, child) for child in node.children
 
-queryPoints = (t1, t2, test) ->
+queryPointsTest = (t1, t2, test) ->
   for i in [0...100]
     px = Math.random() * (MAX_SIZE - QUERY_SIZE)
     py = Math.random() * (MAX_SIZE - QUERY_SIZE)
     q = [px, py, px + QUERY_SIZE, py + QUERY_SIZE]
     test.deepEqual(t1.find(q[0], q[1], q[2], q[3]), t2.find(q[0], q[1], q[2], q[3]), 'Wrong results returned from search')
+
+queryPoints = (qt) ->
+  for i in [0...100]
+    px = Math.random() * (MAX_SIZE - QUERY_SIZE)
+    py = Math.random() * (MAX_SIZE - QUERY_SIZE)
+    qt.find(px, py, px + QUERY_SIZE, py + QUERY_SIZE)
 
 exports.testSimulation = (test) ->
   s = new Scenario(MAX_SIZE)
@@ -28,13 +34,27 @@ exports.testSimulation = (test) ->
 
   s.initCoords()
 
-  for i in [0...500]
+  for i in [0...100]
     s.driftCoords()
     s.storeCoords(qt)
     s.storeCoords(ft)
     validate(test, qt)
 
-  queryPoints(qt, ft, test)
+  queryPointsTest(qt, ft, test)
+  test.done()
+
+
+exports.testSpeed = (test) ->
+  s = new Scenario(MAX_SIZE)
+  qt = new QuadTree([0, 0, MAX_SIZE, MAX_SIZE], 6)
+
+  s.initCoords()
+
+  for i in [0...250]
+    s.driftCoords()
+    s.storeCoords(qt)
+    queryPoints(qt)
+
   test.done()
 
 
