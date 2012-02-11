@@ -24,6 +24,7 @@ class Node
     for own id of @bigItems
       res[id] = true
     for own id of @items
+      #TODO: if the query overlaps an item in multiple cells, I will waste time calling intersects repeatedly
       res[id] = true if intersects(@quadtree.positions[id], q)
     vals = @intersectTest(q)
     for child, i in @children
@@ -122,9 +123,9 @@ class Node
 
   intersectTest: (q) =>
     #Assumes that intersects self is true
-    lowX = q[0] <= @midPoint[0]
+    lowX = q[0] < @midPoint[0]
     highX = q[2] >= @midPoint[0]
-    lowY = q[1] <= @midPoint[1]
+    lowY = q[1] < @midPoint[1]
     highY = q[3] >= @midPoint[1]
     [ lowX and lowY,
       lowX and highY,
