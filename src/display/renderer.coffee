@@ -6,13 +6,15 @@ class Renderer
     @yscale = @canvas.height / (@quad.bounds[3] - @quad.bounds[1])
 
   scalexy: (pos) =>
-    [pos[0] * @xscale, pos[1] * @yscale, pos[2] * @xscale, pos[3] * @yscale]
+    if pos.length is 2
+      return [pos[0] * @xscale, pos[1] * @yscale]
+    return [pos[0] * @xscale, pos[1] * @yscale, pos[2] * @xscale, pos[3] * @yscale]
 
   drawBox: (pos, linecolor = 'black') =>
     @context.strokeStyle = linecolor
     @context.linewidth = 2
     pos = @scalexy(pos)
-    if pos[2] == pos[0] or pos[3] == pos[1]
+    if pos.length is 2
       @context.strokeRect(pos[0], pos[1], 1, 1)
     else
       @context.strokeRect(pos[0], pos[1], pos[2] - pos[0], pos[3] - pos[1])
