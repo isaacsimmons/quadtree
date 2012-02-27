@@ -12,7 +12,6 @@ class Scenario
     @medium = []
     @large = []
 
-
   randomCoord: (buffer = 0) ->
     [Math.random() * (@maxSize - buffer), Math.random() * (@maxSize - buffer)]
 
@@ -71,10 +70,10 @@ class Scenario
 
   storeCoords: (qt) =>
     for point, i in @points
-      qt.put("point#{i}", point[0], point[1])
+      qt.put("point#{i}", point)
     for sbox, si in @small
-      qt.put("small#{si}", sbox[0], sbox[1], sbox[0] + @sizes['small'], sbox[1] + @sizes['small'])
+      qt.put("small#{si}", [sbox[0], sbox[1], sbox[0] + @sizes['small'], sbox[1] + @sizes['small']])
     for mbox, mi in @medium
-      qt.put("medium#{mi}", mbox[0], mbox[1], mbox[0] + @sizes['medium'], mbox[1] + @sizes['medium'])
+      qt.put("medium#{mi}", [mbox[0], mbox[1], mbox[0] + @sizes['medium'], mbox[1] + @sizes['medium']])
     for lbox, li in @large
-      qt.put("large#{li}", lbox[0], lbox[1], lbox[0] + @sizes['large'], lbox[1] + @sizes['large'])
+      qt.put("large#{li}", [lbox[0], lbox[1], lbox[0] + @sizes['large'], lbox[1] + @sizes['large']])

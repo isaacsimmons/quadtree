@@ -3,16 +3,25 @@ class FlatTree
     @items = {}
 
   intersects: (p1, p2) ->
-    p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
+    #TODO: move this into Node?
+    if p1.length is 2
+      if p2.length is 2
+        return p1[0] is p2[0] and p1[1] is p2[1]
+      else
+        return p1[0] >= p2[0] and p1[0] <= p2[2] and p1[1] >= p2[1] and p1[1] <= p2[3]
+    else
+      if p2.length is 2
+        return p2[0] >= p1[0] and p2[0] <= p1[2] and p2[1] >= p1[1] and p2[1] <= p1[3]
+      else
+        return p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
 
-  put: (id, minX, minY, maxX = minX, maxY = minY) =>
-    @items[id] = [minX, minY, maxX, maxY]
+  put: (id, pos) =>
+    @items[id] = pos
 
   remove: (id) =>
     delete @items[id]
 
-  find: (minX, minY, maxX = minX, maxY = minY) =>
-    q = [minX, minY, maxX, maxY]
+  find: (q) =>
     ret = {}
     for own id, pos of @items
       ret[id] = true if @intersects(q, pos)

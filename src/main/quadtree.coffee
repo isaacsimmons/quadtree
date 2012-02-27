@@ -1,10 +1,14 @@
 intersects = (p1, p2) ->
-  #TODO: double check edge conditions -- make sure I don't have p1 and p2 reversed
-  #TODO: maybe I should just use >= on both ends of the bounding box
   #TODO: move this into Node?
-  p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
+  if p1.length is 2
+    if p2.length is 2
+      return p1[0] is p2[0] and p1[1] is p2[1]
+    return p1[0] >= p2[0] and p1[0] <= p2[2] and p1[1] >= p2[1] and p1[1] <= p2[3]
 
-#TODO: normalize box to bottom level cells and don't bother recursing the tree on update if unchanged
+  if p2.length is 2
+    return p2[0] >= p1[0] and p2[0] <= p1[2] and p2[1] >= p1[1] and p2[1] <= p1[3]
+  return p2[2] >= p1[0] and p2[0] <= p1[2] and p2[3] >= p1[1] and p2[1] <= p1[3]
+
 
 class Node
   constructor: (@bounds, @depth, @quadtree) ->
@@ -16,7 +20,6 @@ class Node
     @numItems = 0
     @items = {}
     @bigItems = {}
-
 
   find: (q, res) =>
     if DEBUG
@@ -119,15 +122,25 @@ class Node
               child.insert(id, newpos)
 
   covers: (q) =>
-    q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
+    q.length is 4 and q[0] <= @bounds[0] and q[1] <= @bounds[1] and q[2] >= @bounds[2] and q[3] >= @bounds[3]
 
   intersectTest: (q) =>
     #Assumes that intersects self is true
     lowX = q[0] < @midPoint[0]
-    highX = q[2] >= @midPoint[0]
     lowY = q[1] < @midPoint[1]
+
+    return [
+      lowX and lowY,
+      lowX and not lowY,
+      not lowX and lowY,
+      not lowX and not lowY
+    ] if q.length is 2
+
+    highX = q[2] >= @midPoint[0]
     highY = q[3] >= @midPoint[1]
-    [ lowX and lowY,
+
+    return [
+      lowX and lowY,
       lowX and highY,
       highX and lowY,
       highX and highY
@@ -160,26 +173,28 @@ class QuadTree
     @positions = {}
     @root = new Node(@bounds, 0, @)
 
-  put: (id, minX, minY, maxX = minX, maxY = minY) =>
-    throw "Illegal bounding box for put" if minX > maxX or minY > maxY
-    throw "Coordinate out of bounds for put" if minX < @bounds[0] or minY < @bounds[1] or maxX > @bounds[2] or maxY > @bounds[3]
-
-    newPosition = [minX, minY, maxX, maxY]
+  put: (id, pos) =>
+    #TODO: normalize box to bottom level cells and don't bother recursing the tree on update if unchanged?
+    throw "Illegal bounding box for put" if pos.length is 4 and pos[0] >= pos[2] or pos[1] >= pos[3]
+    throw "Coordinate out of bounds for put" if not intersects(@bounds, pos)
 
     oldPosition = @positions[id]
-    @positions[id] = newPosition
+    @positions[id] = pos.slice()
 
     if oldPosition?
-      @root.update(id, oldPosition, newPosition)
+      @root.update(id, oldPosition, pos)
     else
-      @root.insert(id, newPosition)
+      @root.insert(id, pos)
 
-  find: (minX, minY, maxX = minX, maxY = minY) =>
-    throw "Illegal bounding box for search" if minX > maxX or minY > maxY
+  find: (q) =>
+    throw "Illegal bounding box for search" if q.length is 4 and q[0] >= q[2] or q[1] >= q[3]
     #TODO: should be safe to search outside of the tree area -- make sure that is true
-    @root.find([minX, minY, maxX, maxY], {})
+    @root.find(q, {})
 
   remove: (id) =>
-    throw "Item not present in quadtree" if not id in @positions
+    return if not id of @positions
     @root.remove(id, @positions[id])
     delete @positions[id]
+
+  get: (id) =>
+    @positions[id]

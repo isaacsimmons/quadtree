@@ -19,13 +19,13 @@ queryPointsTest = (t1, t2, test) ->
     px = Math.random() * (MAX_SIZE - QUERY_SIZE)
     py = Math.random() * (MAX_SIZE - QUERY_SIZE)
     q = [px, py, px + QUERY_SIZE, py + QUERY_SIZE]
-    test.deepEqual(t1.find(q[0], q[1], q[2], q[3]), t2.find(q[0], q[1], q[2], q[3]), 'Wrong results returned from search')
+    test.deepEqual(t1.find(q), t2.find(q), 'Wrong results returned from search')
 
 queryPoints = (qt) ->
   for i in [0...100]
     px = Math.random() * (MAX_SIZE - QUERY_SIZE)
     py = Math.random() * (MAX_SIZE - QUERY_SIZE)
-    qt.find(px, py, px + QUERY_SIZE, py + QUERY_SIZE)
+    qt.find([px, py, px + QUERY_SIZE, py + QUERY_SIZE])
 
 exports.testSimulation = (test) ->
   s = new Scenario(MAX_SIZE)
@@ -60,20 +60,20 @@ exports.testSpeed = (test) ->
 
 exports.testEdgeCases = (test) ->
   qt = new QuadTree([-2, -2, 2, 2], 1, 1)
-  qt.put('a', -1, -1, 0, 0)
-  qt.put('b', 0, 0, 1, 1)
-  qt.put('c', 0, 0)
+  qt.put('a', [-1, -1, 0, 0])
+  qt.put('b', [0, 0, 1, 1])
+  qt.put('c', [0, 0])
 
-  test.ok('a' of qt.find(-1, -1))
-  test.ok('b' not of qt.find(-1, -1))
-  test.ok('c' not of qt.find(-1, -1))
-  test.ok('a' of qt.find(0, 0))
-  test.ok('b' of qt.find(0, 0))
-  test.ok('c' of qt.find(0, 0))
-  test.ok('a' of qt.find(0, 0, 1, 1))
-  test.ok('b' of qt.find(0, 0, 1, 1))
-  test.ok('c' of qt.find(0, 0, 1, 1))
-  test.ok('a' not of qt.find(1, 1))
-  test.ok('b' of qt.find(1, 1))
-  test.ok('c' not of qt.find(1, 1))
+  test.ok('a' of qt.find([-1, -1]))
+  test.ok('b' not of qt.find([-1, -1]))
+  test.ok('c' not of qt.find([-1, -1]))
+  test.ok('a' of qt.find([0, 0]))
+  test.ok('b' of qt.find([0, 0]))
+  test.ok('c' of qt.find([0, 0]))
+  test.ok('a' of qt.find([0, 0, 1, 1]))
+  test.ok('b' of qt.find([0, 0, 1, 1]))
+  test.ok('c' of qt.find([0, 0, 1, 1]))
+  test.ok('a' not of qt.find([1, 1]))
+  test.ok('b' of qt.find([1, 1]))
+  test.ok('c' not of qt.find([1, 1]))
   test.done()
